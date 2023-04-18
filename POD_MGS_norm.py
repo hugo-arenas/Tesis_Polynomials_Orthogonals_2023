@@ -1,4 +1,5 @@
-import numpy as np
+#import numpy as np
+import cupy as np
 from matplotlib import pyplot as plt
 from matplotlib import cm
 from math import e, pi
