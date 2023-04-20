@@ -110,9 +110,9 @@ def recurrence2d(z,w,n,fftimg1):
 #    return P, Ig, std_a
 #np.set_printoptions(threshold=np.inf)
 
-N = 31
+N = 101
 
-ini = -1.5
+ini = -5
 
 factor = 3
 
@@ -254,12 +254,12 @@ title="Absolute value of P_2,2"; fig=plt.figure(title); plt.title(title); im=plt
 title="Absolute value of P_6,3"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(P[6,3,:,:]))); plt.colorbar(im) # this exhibit symmetry diferences
 title="Absolute value of P_3,6"; fig=plt.figure(title); plt.title(title);  im=plt.imshow(np.asnumpy(np.absolute(P[3,6,:,:]))); plt.colorbar(im)
 
-title="Absolute value of extrapolated P_6,3"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(P_target[6,3,:,:]))); plt.colorbar(im) # this exhibit symmetry diferences
-title="Absolute value of extrapolated P_3,6"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(P_target[3,6,:,:]))); plt.colorbar(im)
+#title="Absolute value of extrapolated P_6,3"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(P_target[6,3,:,:]))); plt.colorbar(im) # this exhibit symmetry diferences
+#title="Absolute value of extrapolated P_3,6"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(P_target[3,6,:,:]))); plt.colorbar(im)
 
 title="Real part of P_25,18"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.real(P[25,18,:,:]))); plt.colorbar(im)
 title="Real part of P_18,25"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.real(P[18,25,:,:]))); plt.colorbar(im)
-title="Absolute value of extrapolated P_18,25"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(P_target[18,25,:,:]))); plt.colorbar(im)
+#title="Absolute value of extrapolated P_18,25"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(P_target[18,25,:,:]))); plt.colorbar(im)
 title="Model"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(Ig)))
 title="Result"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(I)))
 title="Residual"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(residual)))
