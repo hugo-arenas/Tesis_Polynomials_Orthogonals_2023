@@ -43,7 +43,7 @@ def recurrence2d(z,z_target,w,n):
                     
            
     return P, P_target
-np.set_printoptions(threshold=np.inf)
+#np.set_printoptions(threshold=np.inf)
 
 N = 31
 
@@ -69,10 +69,12 @@ fig = plt.figure("image vs fft")
 ax1 = fig.add_subplot(121)
 ax2 = fig.add_subplot(122)
 
-im1=ax1.matshow(img1)
+im1=ax1.matshow(np.asnumpy(img1))
+# <<< conda initialize <<<
 
-im2=ax2.matshow(np.abs(fftimg1))
+im2=ax2.matshow(np.asnumpy(np.abs(fftimg1)))
 plt.show()
+plt.savefig("imagenes.png")
 
 dx = (ini*2)/N
 du = 1/(dx*N)
@@ -119,13 +121,13 @@ pp =np.reshape(pp,(int(N*(N-1)/2),N*N))
 corr=np.dot(pp,np.conjugate(pp.T))
 
 fig=plt.figure("corr")
-im=plt.imshow(np.absolute(corr))
+im=plt.imshow(np.asnumpy(np.absolute(corr)))
 plt.colorbar(im)
 
 # we exibit orthononality errors (no diagonal) bellow diagonal
-cor=corr-np.diag(np.diag(corr))
+cor=corr-np.diag(np.asnumpy(np.diag(corr)))
 fig=plt.figure()
-im=plt.imshow(np.absolute(cor))
+im=plt.imshow(np.asnumpy(np.absolute(cor)))
 plt.colorbar(im)
 
 # we exhibit orthogonality for whole matrix 
@@ -153,7 +155,7 @@ cor2=corr2-np.diag(np.diag(corr2))
 
 fig=plt.figure(title)
 plt.title(title)
-im=plt.imshow(np.absolute(cor2))
+im=plt.imshow(np.asnumpy(np.absolute(cor2)))
 plt.colorbar(im)
 
 
@@ -165,23 +167,26 @@ ndpp= np.dot(dpp,np.conjugate(dpp.T))
 title="Correlation of differences kj - jk"
 fig=plt.figure(title)
 plt.title(title)
-im=plt.imshow(np.absolute(ndpp))
+im=plt.imshow(np.asnumpy(np.absolute(ndpp)))
 plt.colorbar(im)
 
 # looking for different polinomials shape
 P=np.reshape(P,(N-1,N-1,N,N))
 P_target=np.reshape(P_target,(N-1,N-1,factor*N,factor*N))
 
-title="Absolute value of P_2,2"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.absolute(P[2,2,:,:])); plt.colorbar(im)
+title="Absolute value of P_2,2"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(P[2,2,:,:]))); plt.colorbar(im)
 
-title="Absolute value of P_6,3"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.absolute(P[6,3,:,:])); plt.colorbar(im) # this exhibit symmetry diferences
+title="Absolute value of P_6,3"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(P[6,3,:,:]))); plt.colorbar(im) # this exhibit symmetry diferences
 title="Absolute value of P_3,6"; fig=plt.figure(title); plt.title(title);  im=plt.imshow(np.absolute(P[3,6,:,:])); plt.colorbar(im)
 
-title="Absolute value of extrapolated P_6,3"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.absolute(P_target[6,3,:,:])); plt.colorbar(im) # this exhibit symmetry diferences
-title="Absolute value of extrapolated P_3,6"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.absolute(P_target[3,6,:,:])); plt.colorbar(im)
+title="Absolute value of extrapolated P_6,3"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(P_target[6,3,:,:]))); plt.colorbar(im) # this exhibit symmetry diferences
+title="Absolute value of extrapolated P_3,6"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(P_target[3,6,:,:]))); plt.colorbar(im)
 
-title="Real part of P_25,18"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.real(P[25,18,:,:])); plt.colorbar(im)
-title="Real part of P_18,25"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.real(P[18,25,:,:])); plt.colorbar(im)
-title="Absolute value of extrapolated P_18,25"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.absolute(P_target[18,25,:,:])); plt.colorbar(im)
+title="Real part of P_25,18"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.real(P[25,18,:,:]))); plt.colorbar(im)
+title="Real part of P_18,25"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.real(P[18,25,:,:]))); plt.colorbar(im)
+title="Absolute value of extrapolated P_18,25"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(P_target[18,25,:,:]))); plt.colorbar(im)
 
 plt.show()
+
+
+print()
