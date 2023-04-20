@@ -1,4 +1,5 @@
-import numpy as np
+#import numpy as np
+import cupy as np
 from matplotlib import pyplot as plt
 from matplotlib import cm
 from math import e, pi
@@ -48,11 +49,11 @@ def recurrence2d(z,w,n,fftimg1):
                 std_a = np.concatenate((std_a,np.array([std])),axis=0)
            
     return P, Ig, std_a
-np.set_printoptions(threshold=np.inf)
+#np.set_printoptions(threshold=np.inf)
 
-N = 51
+N = 101
 
-ini = -1.5
+ini = -5
 
 factor = 3
 
@@ -72,9 +73,9 @@ fig = plt.figure("image vs fft")
 ax1 = fig.add_subplot(121)
 ax2 = fig.add_subplot(122)
 
-im1=ax1.matshow(img1)
+im1=ax1.matshow(np.asnumpy(img1))
 
-im2=ax2.matshow(np.abs(fftimg1))
+im2=ax2.matshow(np.asnumpy(np.absolute(fftimg1)))
 #plt.show()
 
 dx = (ini*2)/N
@@ -117,13 +118,13 @@ pp =np.reshape(pp,(int(N*(N-1)/2),N*N))
 corr=np.dot(pp,np.conjugate(pp.T))
 
 fig=plt.figure("corr")
-im=plt.imshow(np.absolute(corr))
+im=plt.imshow(np.asnumpy(np.absolute(corr)))
 plt.colorbar(im)
 
 # we exibit orthononality errors (no diagonal) bellow diagonal
 cor=corr-np.diag(np.diag(corr))
 fig=plt.figure()
-im=plt.imshow(np.absolute(cor))
+im=plt.imshow(np.asnumpy(np.absolute(cor)))
 plt.colorbar(im)
 
 # we exhibit orthogonality for whole matrix 
@@ -151,7 +152,7 @@ cor2=corr2-np.diag(np.diag(corr2))
 
 fig=plt.figure(title)
 plt.title(title)
-im=plt.imshow(np.absolute(cor2))
+im=plt.imshow(np.asnumpy(np.absolute(cor2)))
 plt.colorbar(im)
 
 
@@ -163,7 +164,7 @@ ndpp= np.dot(dpp,np.conjugate(dpp.T))
 title="Correlation of differences kj - jk"
 fig=plt.figure(title)
 plt.title(title)
-im=plt.imshow(np.absolute(ndpp))
+im=plt.imshow(np.asnumpy(np.absolute(ndpp)))
 plt.colorbar(im)
 
 # looking for different polinomials shape
@@ -189,21 +190,21 @@ I = np.fft.fftshift(I)
 
 residual = Ig - fftimg1
 
-title="Absolute value of P_2,2"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.absolute(P[2,2,:,:])); plt.colorbar(im)
+title="Absolute value of P_2,2"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(P[2,2,:,:]))); plt.colorbar(im)
 
-title="Absolute value of P_6,3"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.absolute(P[6,3,:,:])); plt.colorbar(im) # this exhibit symmetry diferences
-title="Absolute value of P_3,6"; fig=plt.figure(title); plt.title(title);  im=plt.imshow(np.absolute(P[3,6,:,:])); plt.colorbar(im)
+title="Absolute value of P_6,3"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(P[6,3,:,:]))); plt.colorbar(im) # this exhibit symmetry diferences
+title="Absolute value of P_3,6"; fig=plt.figure(title); plt.title(title);  im=plt.imshow(np.asnumpy(np.absolute(P[3,6,:,:]))); plt.colorbar(im)
 
-title="Absolute value of extrapolated P_6,3"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.absolute(P_target[6,3,:,:])); plt.colorbar(im) # this exhibit symmetry diferences
-title="Absolute value of extrapolated P_3,6"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.absolute(P_target[3,6,:,:])); plt.colorbar(im)
+title="Absolute value of extrapolated P_6,3"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(P_target[6,3,:,:]))); plt.colorbar(im) # this exhibit symmetry diferences
+title="Absolute value of extrapolated P_3,6"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(P_target[3,6,:,:]))); plt.colorbar(im)
 
-title="Real part of P_25,18"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.real(P[25,18,:,:])); plt.colorbar(im)
-title="Real part of P_18,25"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.real(P[18,25,:,:])); plt.colorbar(im)
-title="Absolute value of extrapolated P_18,25"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.absolute(P_target[18,25,:,:])); plt.colorbar(im)
-title="Model"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.absolute(Ig))
-title="Result"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.absolute(I))
-title="Residual"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.absolute(residual))
-title="Desviation Standar"; fig=plt.figure(title); plt.title(title); plt.plot(std_a)
+title="Real part of P_25,18"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.real(P[25,18,:,:]))); plt.colorbar(im)
+title="Real part of P_18,25"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.real(P[18,25,:,:]))); plt.colorbar(im)
+title="Absolute value of extrapolated P_18,25"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(P_target[18,25,:,:]))); plt.colorbar(im)
+title="Model"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(Ig)))
+title="Result"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(I)))
+title="Residual"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(residual)))
+title="Desviation Standar"; fig=plt.figure(title); plt.title(title); plt.plot(np.asnumpy(std_a))
 
 plt.show()
 

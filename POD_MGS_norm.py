@@ -72,8 +72,8 @@ ax2 = fig.add_subplot(122)
 im1=ax1.matshow(np.asnumpy(img1))
 # <<< conda initialize <<<
 
-im2=ax2.matshow(np.asnumpy(np.abs(fftimg1)))
-plt.show()
+im2=ax2.matshow(np.asnumpy(np.absolute(fftimg1)))
+#plt.show()
 plt.savefig("imagenes.png")
 
 dx = (ini*2)/N
