@@ -110,9 +110,9 @@ def recurrence2d(z,w,n,fftimg1):
 #    return P, Ig, std_a
 #np.set_printoptions(threshold=np.inf)
 
-N = 101
+N = 31
 
-ini = -5
+ini = -1.5
 
 factor = 3
 
