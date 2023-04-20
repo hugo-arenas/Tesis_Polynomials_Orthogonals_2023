@@ -14,29 +14,23 @@ def norm(weights,x):
 
 def dot2x2(weights,x,y):
   f,c,d = y.shape
-  #aux = np.ones(shape=(f,c,d),dtype=float)
-  aux = np.empty((f,c,d),dtype=float)
-  aux = aux + 1.0
+  aux = np.ones(shape=(f,c,d),dtype=float)
   w = aux*weights
   mul = x*w*np.conjugate(y)
   npsum = np.sum(mul,axis=2)
-  #npsum = np.reshape(npsum,(f,c,1))
-  npsum = npsum[:, :, np.newaxis]
+  npsum = np.reshape(npsum,(f,c,1))
   npsum = aux*npsum
 
   return npsum
 
 def norm2x2(weights,x):
   f,c,d = x.shape
-  #aux = np.ones(shape=(f,c,d),dtype=float)
-  aux = np.empty((f,c,d),dtype=float)
-  aux = aux + 1.0
+  aux = np.ones(shape=(f,c,d),dtype=float)
   w = aux*weights
   mul = w*np.absolute(x)**2
   npsum = np.sum(mul,axis=2)
   npsum = np.sqrt(npsum)
-  #npsum = np.reshape(npsum,(f,c,1))
-  npsum = npsum[:, :, np.newaxis]
+  npsum = np.reshape(npsum,(f,c,1))
   npsum = aux*npsum
   return npsum
 
