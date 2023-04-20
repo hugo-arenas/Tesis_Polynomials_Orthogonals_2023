@@ -1,4 +1,5 @@
-import numpy as np
+#import numpy as np
+import cupy as np
 from matplotlib import pyplot as plt
 from matplotlib import cm
 from math import e, pi
@@ -81,7 +82,7 @@ def new_r2d(z,w,n):
                 P = P - dot2x2(w,sub_p,P)*sub_p
                 P = P/norm2x2(w,P)
     return M
-np.set_printoptions(threshold=np.inf)
+#np.set_printoptions(threshold=np.inf)
 
 N = 31
 
@@ -107,9 +108,9 @@ fig = plt.figure("image vs fft")
 ax1 = fig.add_subplot(121)
 ax2 = fig.add_subplot(122)
 
-im1=ax1.matshow(img1)
+im1=ax1.matshow(np.asnumpy(img1))
 
-im2=ax2.matshow(np.abs(fftimg1))
+im2=ax2.matshow(np.asnumpy(np.absolute(fftimg1)))
 plt.show()
 
 dx = (ini*2)/N
@@ -136,4 +137,4 @@ P2 = new_r2d(z.flatten(), w.flatten(), S)
 
 print(time.time() - start_time)
 
-print(np.sum(P1-P2))
+print(np.asnumpy(np.sum(P1-P2)))
