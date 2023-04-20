@@ -12,45 +12,104 @@ def dot(weights,x,y):
 def norm(weights,x):
   return(np.sqrt(np.sum(weights*np.absolute(x)**2)))
 
+def dot2x2(weights,x,y):
+  f,c,d = y.shape
+  aux = np.ones(shape=(f,c,d),dtype=float)
+  w = aux*weights
+  mul = x*w*np.conjugate(y)
+  npsum = np.sum(mul,axis=2)
+  npsum = np.reshape(npsum,(f,c,1))
+  npsum = aux*npsum
+
+  return npsum
+
+def norm2x2(weights,x):
+  f,c,d = x.shape
+  aux = np.ones(shape=(f,c,d),dtype=float)
+  w = aux*weights
+  mul = w*np.absolute(x)**2
+  npsum = np.sum(mul,axis=2)
+  npsum = np.sqrt(npsum)
+  npsum = np.reshape(npsum,(f,c,1))
+  npsum = aux*npsum
+  return npsum
+  
 def recurrence2d(z,w,n,fftimg1):
-    P =np.zeros(shape=(n,n,z.size),dtype=np.complex128)
-    M = np.zeros(shape=(n,n),dtype=np.complex128)
+    P = np.zeros(shape=(n,n,z.size),dtype=np.complex128)
+    A = np.zeros(shape=(n,n,z.size),dtype=np.complex128)
+    M = 0.0 + 0.0j
     f, c = fftimg1.shape
     Ig = np.zeros(shape=(f,c),dtype=np.complex128)
     std_a = np.zeros(1,dtype=np.complex128)
     ffti = np.array(fftimg1)
+    
     for j in range(0,n):
         for k in range(0,n):
             P[k,j,:] = (z**k)*np.conjugate(z**j)
             P[k,j,:] = P[k,j,:]/norm(w,P[k,j,:])
-                      
+            
     for j in range(0,n):
-        for k in range(0,n):        
+        for k in range(0,n):
+            
             P[k,j,:] = P[k,j,:]/norm(w,P[k,j,:])
-            h = 0
-            for x in range(j,n):
-                if (x==j):
-                    h=k+1
-                else:
-                    h=0
-                for y in range(h,n):
-                    P[y,x,:] = P[y,x,:] - dot(w,P[k,j,:],P[y,x,:])*P[k,j,:]
-                    P[y,x,:] = P[y,x,:]/norm(w,P[y,x,:])
-                    
-            M[k,j] =  dot(w,P[k,j,:],ffti.flatten())
-            Psub = np.reshape(P,(n,n,f,c))
-            Ig = Ig + M[k,j]*Psub[k,j,:,:]
+            sub_p = np.array(P[k,j,:])
+            A[k,j,:] = np.array(P[k,j,:])
+                
+            M = dot(w,A[k,j,:],ffti.flatten())
+            Asub = np.reshape(A,(n,n,f,c))
+            Ig = Ig + M*Asub[k,j,:,:]
             if j==0 and k == 0:
                 std = np.std(fftimg1)
                 std_a[0] = std
             else:
-                ffti = ffti - M[k,j]*Psub[k,j,:,:]
+                ffti = ffti - M*Asub[k,j,:,:]
                 std = np.std(ffti)
                 std_a = np.concatenate((std_a,np.array([std])),axis=0)
-           
+                
+            P = P - dot2x2(w,sub_p,P)*sub_p
+            P = P/norm2x2(w,P)
     return P, Ig, std_a
-#np.set_printoptions(threshold=np.inf)
 
+
+#def recurrence2d(z,w,n,fftimg1):
+#    P =np.zeros(shape=(n,n,z.size),dtype=np.complex128)
+#    M = np.zeros(shape=(n,n),dtype=np.complex128)
+#    f, c = fftimg1.shape
+#    Ig = np.zeros(shape=(f,c),dtype=np.complex128)
+#    std_a = np.zeros(1,dtype=np.complex128)
+#    ffti = np.array(fftimg1)
+#    for j in range(0,n):
+#        for k in range(0,n):
+#            P[k,j,:] = (z**k)*np.conjugate(z**j)
+#            P[k,j,:] = P[k,j,:]/norm(w,P[k,j,:])
+#                      
+#    for j in range(0,n):
+#        for k in range(0,n):        
+#            P[k,j,:] = P[k,j,:]/norm(w,P[k,j,:])
+#            h = 0
+#            for x in range(j,n):
+#                if (x==j):
+#                    h=k+1
+#                else:
+#                    h=0
+#                for y in range(h,n):
+#                    P[y,x,:] = P[y,x,:] - dot(w,P[k,j,:],P[y,x,:])*P[k,j,:]
+#                    P[y,x,:] = P[y,x,:]/norm(w,P[y,x,:])
+                    
+#            M[k,j] =  dot(w,P[k,j,:],ffti.flatten())
+#            Psub = np.reshape(P,(n,n,f,c))
+#            Ig = Ig + M[k,j]*Psub[k,j,:,:]
+#            if j==0 and k == 0:
+#                std = np.std(fftimg1)
+#                std_a[0] = std
+#            else:
+#                ffti = ffti - M[k,j]*Psub[k,j,:,:]
+#                std = np.std(ffti)
+#                std_a = np.concatenate((std_a,np.array([std])),axis=0)
+           
+#    return P, Ig, std_a
+#np.set_printoptions(threshold=np.inf)
+'''
 N = 31
 
 ini = -1.5
