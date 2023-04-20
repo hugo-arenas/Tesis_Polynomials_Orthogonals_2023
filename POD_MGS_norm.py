@@ -177,7 +177,7 @@ P_target=np.reshape(P_target,(N-1,N-1,factor*N,factor*N))
 title="Absolute value of P_2,2"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(P[2,2,:,:]))); plt.colorbar(im)
 
 title="Absolute value of P_6,3"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(P[6,3,:,:]))); plt.colorbar(im) # this exhibit symmetry diferences
-title="Absolute value of P_3,6"; fig=plt.figure(title); plt.title(title);  im=plt.imshow(np.absolute(P[3,6,:,:])); plt.colorbar(im)
+title="Absolute value of P_3,6"; fig=plt.figure(title); plt.title(title);  im=plt.imshow(np.asnumpy(np.absolute(P[3,6,:,:]))); plt.colorbar(im)
 
 title="Absolute value of extrapolated P_6,3"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(P_target[6,3,:,:]))); plt.colorbar(im) # this exhibit symmetry diferences
 title="Absolute value of extrapolated P_3,6"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(P_target[3,6,:,:]))); plt.colorbar(im)
