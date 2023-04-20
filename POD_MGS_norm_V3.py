@@ -68,7 +68,7 @@ def recurrence2d(z,w,n,fftimg1):
                 
             P = P - dot2x2(w,sub_p,P)*sub_p
             P = P/norm2x2(w,P)
-    return P, Ig, std_a
+    return A, Ig, std_a
 
 
 #def recurrence2d(z,w,n,fftimg1):
@@ -110,9 +110,9 @@ def recurrence2d(z,w,n,fftimg1):
 #    return P, Ig, std_a
 #np.set_printoptions(threshold=np.inf)
 
-N = 31
+N = 51
 
-ini = -1.5
+ini = -2
 
 factor = 3
 
