@@ -111,7 +111,7 @@ ax2 = fig.add_subplot(122)
 im1=ax1.matshow(np.asnumpy(img1))
 
 im2=ax2.matshow(np.asnumpy(np.absolute(fftimg1)))
-plt.show()
+#plt.show()
 
 dx = (ini*2)/N
 du = 1/(dx*N)
@@ -130,11 +130,13 @@ start_time = time.time()
 
 P1 = old_r2d(z.flatten(), w.flatten(), S)
 
-print(time.time() - start_time)
+print("Tiempo de ejecución orden N^4:", time.time() - start_time)
 start_time = time.time()
 
 P2 = new_r2d(z.flatten(), w.flatten(), S)
 
-print(time.time() - start_time)
+print("Tiempo de ejecución orden N^2 (nuevo):", time.time() - start_time)
 
-print(np.asnumpy(np.sum(P1-P2)))
+print("Diferencia de resultados:", np.asnumpy(np.sum(P1-P2)))
+
+plt.show()
