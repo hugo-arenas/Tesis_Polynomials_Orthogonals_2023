@@ -111,6 +111,7 @@ def recurrence2d(z,w,n,fftimg1):
 #np.set_printoptions(threshold=np.inf)
 
 N = 101
+S = 100
 
 ini = -3
 
@@ -163,16 +164,16 @@ P, Ig, std_a = recurrence2d(z.flatten(), w.flatten(), N-1, fftimg1)
 print(time.time() - start_time)
 # Polynomial correlation
 
-K=np.arange(N-1)
-J=np.arange(N-1)
+K=np.arange(S)
+J=np.arange(S)
 K,J=np.meshgrid(K,J)
 #idx=K>=J
 idx=K>=J # case with diagonal
-idx = np.reshape(idx,(N-1,N-1,1))
-idx = np.ones((N-1,N-1,N*N))*idx
+idx = np.reshape(idx,(S,S,1))
+idx = np.ones((S,S,N*N))*idx
 idx = idx==1
 pp=P[idx]
-pp =np.reshape(pp,(int(N*(N-1)/2),N*N))
+pp =np.reshape(pp,(int(S*(S+1)/2),N*N))
 #pp =np.reshape(pp,(int(N*(N-1)/2),M*M)) # case without diagonal
 corr=np.dot(pp,np.conjugate(pp.T))
 
@@ -189,23 +190,23 @@ plt.colorbar(im)
 # we exhibit orthogonality for whole matrix 
 title="Polynomials Correlation half matrix below main counter diagonal"
 
-K=np.arange(N-1)
-one = np.ones(N-1)
-K=np.reshape(K,(N-1,1))
-one=np.reshape(one,(1,N-1))
+K=np.arange(S)
+one = np.ones(S)
+K=np.reshape(K,(S,1))
+one=np.reshape(one,(1,S))
 K=K*one
-J=np.arange(N-1)
-J=np.reshape(J,(1,N-1))
-one=np.reshape(one,(N-1,1))
+J=np.arange(S)
+J=np.reshape(J,(1,S))
+one=np.reshape(one,(S,1))
 J=J*one
-Idx = K+J<=N-2
+Idx = K+J<=S-1
 
-one=np.ones(shape=(N-1,N-1,N*N))
-Idx=np.reshape(Idx,(N-1,N-1,1))
+one=np.ones(shape=(S,S,N*N))
+Idx=np.reshape(Idx,(S,S,1))
 Idx=Idx*one
 Idx=Idx==1
 pp2=P[Idx]
-pp2 = np.reshape(pp2,(int(N*(N-1)/2),N*N))
+pp2 = np.reshape(pp2,(int(S*(S+1)/2),N*N))
 corr2=np.dot(pp2,np.conjugate(pp2.T))
 cor2=corr2-np.diag(np.diag(corr2))
 
@@ -216,9 +217,9 @@ plt.colorbar(im)
 
 
 # we exibit lack of symmetry kj <-> jk
-pp2 = np.reshape(P,(N-1,N-1,N*N))
+pp2 = np.reshape(P,(S,S,N*N))
 dpp = np.absolute(pp2 - np.transpose(pp2,axes=(1,0,2))) 
-dpp = np.reshape(dpp,((N-1)*(N-1),N*N))
+dpp = np.reshape(dpp,((S)*(S),N*N))
 ndpp= np.dot(dpp,np.conjugate(dpp.T))
 title="Correlation of differences kj - jk"
 fig=plt.figure(title)
@@ -227,7 +228,7 @@ im=plt.imshow(np.asnumpy(np.absolute(ndpp)))
 plt.colorbar(im)
 
 # looking for different polinomials shape
-P=np.reshape(P,(N-1,N-1,N,N))
+P=np.reshape(P,(S,S,N,N))
 #P_target=np.reshape(P_target,(N-1,N-1,factor*N,factor*N))
 
 #M = np.zeros(shape=(N-1,N-1),dtype=np.complex128)
