@@ -111,7 +111,7 @@ def recurrence2d(z,w,n,fftimg1):
 #np.set_printoptions(threshold=np.inf)
 
 N = 101
-S = 100
+S = 120
 
 ini = -3
 
