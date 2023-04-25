@@ -70,8 +70,13 @@ def recurrence2d(z,w,n,fftimg1):
             P = P/norm2x2(w,P)
     return A, Ig, std_a
 
+<<<<<<< Updated upstream
 N = 51
 S = 76
+=======
+N = 31
+S = 60
+>>>>>>> Stashed changes
 
 ini = -2
 
