@@ -70,7 +70,7 @@ def recurrence2d(z,w,n,fftimg1):
             P = P/norm2x2(w,P)
     return A, Ig, std_a
 
-N = 61
+N = 51
 S = 76
 
 ini = -2
@@ -222,6 +222,8 @@ title="Real part of P_25,18"; fig=plt.figure(title); plt.title(title); im=plt.im
 title="Real part of P_18,25"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.real(P[18,25,:,:]))); plt.colorbar(im)
 #title="Absolute value of extrapolated P_18,25"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(P_target[18,25,:,:]))); plt.colorbar(im)
 title="Model"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(Ig)))
+
+plt.savefig("modelo.png")
 title="Result"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(I)))
 title="Residual"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(residual)))
 title="Desviation Standar"; fig=plt.figure(title); plt.title(title); plt.plot(np.asnumpy(std_a))
