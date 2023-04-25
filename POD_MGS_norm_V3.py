@@ -70,50 +70,10 @@ def recurrence2d(z,w,n,fftimg1):
             P = P/norm2x2(w,P)
     return A, Ig, std_a
 
+N = 61
+S = 76
 
-#def recurrence2d(z,w,n,fftimg1):
-#    P =np.zeros(shape=(n,n,z.size),dtype=np.complex128)
-#    M = np.zeros(shape=(n,n),dtype=np.complex128)
-#    f, c = fftimg1.shape
-#    Ig = np.zeros(shape=(f,c),dtype=np.complex128)
-#    std_a = np.zeros(1,dtype=np.complex128)
-#    ffti = np.array(fftimg1)
-#    for j in range(0,n):
-#        for k in range(0,n):
-#            P[k,j,:] = (z**k)*np.conjugate(z**j)
-#            P[k,j,:] = P[k,j,:]/norm(w,P[k,j,:])
-#                      
-#    for j in range(0,n):
-#        for k in range(0,n):        
-#            P[k,j,:] = P[k,j,:]/norm(w,P[k,j,:])
-#            h = 0
-#            for x in range(j,n):
-#                if (x==j):
-#                    h=k+1
-#                else:
-#                    h=0
-#                for y in range(h,n):
-#                    P[y,x,:] = P[y,x,:] - dot(w,P[k,j,:],P[y,x,:])*P[k,j,:]
-#                    P[y,x,:] = P[y,x,:]/norm(w,P[y,x,:])
-                    
-#            M[k,j] =  dot(w,P[k,j,:],ffti.flatten())
-#            Psub = np.reshape(P,(n,n,f,c))
-#            Ig = Ig + M[k,j]*Psub[k,j,:,:]
-#            if j==0 and k == 0:
-#                std = np.std(fftimg1)
-#                std_a[0] = std
-#            else:
-#                ffti = ffti - M[k,j]*Psub[k,j,:,:]
-#                std = np.std(ffti)
-#                std_a = np.concatenate((std_a,np.array([std])),axis=0)
-           
-#    return P, Ig, std_a
-#np.set_printoptions(threshold=np.inf)
-
-N = 101
-S = 120
-
-ini = -3
+ini = -2
 
 factor = 3
 
@@ -126,7 +86,7 @@ array_y = np.reshape(array_x,(1,N))
 
 img1 = np.exp(-pi*(array_x**2 + array_y**2))
 
-fftimg1 = np.fft.fft2(img1)*pi/N
+fftimg1 = np.fft.fft2(img1)#*pi/N
 fftimg1 = np.fft.fftshift(fftimg1)
 
 fig = plt.figure("image vs fft")
@@ -159,7 +119,7 @@ start_time = time.time()
 
 #P, P_target, Ig, std_a = recurrence2d(z.flatten(), z_target.flatten(), w.flatten(), N-1, fftimg1)
 #P, Ig, std_a = recurrence2d(z.flatten(), z_target.flatten(), w.flatten(), N-1, fftimg1)
-P, Ig, std_a = recurrence2d(z.flatten(), w.flatten(), N-1, fftimg1)
+P, Ig, std_a = recurrence2d(z.flatten(), w.flatten(), S, fftimg1)
 
 print(time.time() - start_time)
 # Polynomial correlation
@@ -245,8 +205,8 @@ P=np.reshape(P,(S,S,N,N))
 
 #I = np.fft.fftshift(Ig)
 
-I = np.fft.ifft2(Ig)*N/pi
-I = np.fft.fftshift(I)
+I = np.fft.ifft2(Ig)#*N/pi
+#I = np.fft.fftshift(I)
 
 residual = Ig - fftimg1
 
