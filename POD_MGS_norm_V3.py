@@ -70,15 +70,10 @@ def recurrence2d(z,w,n,fftimg1):
             P = P/norm2x2(w,P)
     return A, Ig, std_a
 
-<<<<<<< Updated upstream
-N = 51
-S = 76
-=======
-N = 31
-S = 60
->>>>>>> Stashed changes
+N = 71
+S = 80
 
-ini = -2
+ini = -1
 
 factor = 3
 
@@ -111,11 +106,11 @@ u0 = -Lu/2
 du = np.linspace(u0,-u0,N)
 u,v = np.meshgrid(du,du)
 
-z = u + 1j*v
+z = u/u.max() + 1j*v/v.max()
 
-du = np.linspace(u0,-u0,N*factor)
-u,v = np.meshgrid(du,du)
-z_target = u + 1j*v
+#du = np.linspace(u0,-u0,N*factor)
+#u,v = np.meshgrid(du,du)
+#z_target = u + 1j*v
 
     
 w = np.ones((N,N))
