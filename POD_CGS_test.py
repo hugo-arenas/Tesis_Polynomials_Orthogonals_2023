@@ -22,6 +22,17 @@ def dot2x2(weights,x,y):
   npsum = aux*npsum
 
   return npsum
+  
+def dot2x2C(weights,x,y):
+  f,c,d = y.shape
+  aux = np.ones(shape=(f,c,d),dtype=float)
+  w = aux*weights
+  mul = y*np.conjugate(x)*w
+  npsum = np.sum(mul,axis=2)
+  npsum = np.reshape(npsum,(f,c,1))
+  npsum = aux*npsum
+
+  return npsum
 
 def norm2x2(weights,x):
   f,c,d = x.shape
@@ -57,7 +68,7 @@ def old_r2d(z,w,n):
 def new_r2d(z,w,n):
     P = np.zeros(shape=(n,n,z.size),dtype=np.complex128)
     M = np.zeros(shape=(n,n,z.size),dtype=np.complex128)
-    
+    D = np.zeros(z.size,dtype=np.complex128)
     for j in range(0,n):
         for k in range(0,n):
             P[k,j,:] = (z**k)*np.conjugate(z**j)
@@ -75,7 +86,7 @@ def new_r2d(z,w,n):
                     E = E/norm2x2(w,E)
                     P[:,j:n,:] = np.array(E)
                     
-                P = P - dot2x2(w,D,P)*D
+                P = P - dot2x2C(w,D,P)*D
                 P[k,j,:] =  P[k,j,:]/norm(w,P[k,j,:])
                 D=np.array(P[k,j,:])
                 M[k,j,:] = np.array(P[k,j,:])
@@ -83,11 +94,11 @@ def new_r2d(z,w,n):
     return M
 #np.set_printoptions(threshold=np.inf)
 
-N = 31
+N = 7
 
-S = 30
+S = 6
 
-ini = -1.5
+ini = -1
 
 factor = 3
 
@@ -136,6 +147,8 @@ P2 = new_r2d(z.flatten(), w.flatten(), S)
 
 print("Tiempo de ejecución orden N^2 (nuevo):", time.time() - start_time)
 
-print("Diferencia de resultados:", np.asnumpy(np.sum(P1-P2)))
+idx = P1==P2
+#print("Diferencia de resultados:", np.asnumpy(np.sum(P1-P2)))
+print("Diferencia de resultados:", idx)
 
 plt.show()
