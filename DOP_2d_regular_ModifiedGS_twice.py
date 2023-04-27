@@ -12,7 +12,8 @@ check orthogonality, recurrence, error map
 
 """
 
-import numpy as np
+#import numpy as np
+import cupy as np
 from matplotlib import pyplot as plt
 
 
@@ -175,7 +176,7 @@ corr=np.dot(pp,np.conjugate(pp.T))
 title="Polynomials Correlation by pair (diagonal: equal indexes)"
 fig=plt.figure(title)
 plt.title(title)
-im=plt.imshow(np.absolute(corr))
+im=plt.imshow(np.asnumpy(np.absolute(corr)))
 plt.colorbar(im)
 
 # we exibit orthononality errors (no diagonal) bellow diagonal
@@ -183,7 +184,7 @@ cor=corr-np.diag(np.diag(corr))
 title="Polynomials Correlation below diagonal (k<=j)"
 fig=plt.figure(title)
 plt.title(title)
-im=plt.imshow(np.absolute(cor))
+im=plt.imshow(np.asnumpy(np.absolute(cor)))
 plt.colorbar(im)
 
 # we exhibit orthogonality for whole matrix 
@@ -193,7 +194,7 @@ cor1=corr1-np.diag(np.diag(corr1))
 title="Polynomials Correlation full matrix with no diagonal"
 fig=plt.figure(title)
 plt.title(title)
-im=plt.imshow(np.absolute(cor1))
+im=plt.imshow(np.asnumpy(np.absolute(cor1)))
 plt.colorbar(im)
 
 # we exhibit orthogonality for whole matrix 
@@ -223,7 +224,7 @@ cor2=corr2-np.diag(np.diag(corr2))
 
 fig=plt.figure(title)
 plt.title(title)
-im=plt.imshow(np.absolute(cor2))
+im=plt.imshow(np.asnumpy(np.absolute(cor2)))
 plt.colorbar(im)
 
 
@@ -235,21 +236,23 @@ ndpp= np.dot(dpp,np.conjugate(dpp.T))
 title="Correlation of differences kj - jk"
 fig=plt.figure(title)
 plt.title(title)
-im=plt.imshow(np.absolute(ndpp))
+im=plt.imshow(np.asnumpy(np.absolute(ndpp)))
 plt.colorbar(im)
 
 # looking for different polinomials shape
 P=np.reshape(P,(N,N,M,M))
 P_target=np.reshape(P_target,(N,N,ext_factor*M,ext_factor*M))
 
-title="Absolute value of P_2,2"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.absolute(P[2,2,:,:])); plt.colorbar(im)
+title="Absolute value of P_2,2"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(P[2,2,:,:]))); plt.colorbar(im)
 
-title="Absolute value of P_6,3"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.absolute(P[6,3,:,:])); plt.colorbar(im) # this exhibit symmetry diferences
-title="Absolute value of P_3,6"; fig=plt.figure(title); plt.title(title);  im=plt.imshow(np.absolute(P[3,6,:,:])); plt.colorbar(im)
+title="Absolute value of P_6,3"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(P[6,3,:,:]))); plt.colorbar(im) # this exhibit symmetry diferences
+title="Absolute value of P_3,6"; fig=plt.figure(title); plt.title(title);  im=plt.imshow(np.asnumpy(np.absolute(P[3,6,:,:]))); plt.colorbar(im)
 
-title="Absolute value of extrapolated P_6,3"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.absolute(P_target[6,3,:,:])); plt.colorbar(im) # this exhibit symmetry diferences
-title="Absolute value of extrapolated P_3,6"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.absolute(P_target[3,6,:,:])); plt.colorbar(im)
+title="Absolute value of extrapolated P_6,3"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(P_target[6,3,:,:]))); plt.colorbar(im) # this exhibit symmetry diferences
+title="Absolute value of extrapolated P_3,6"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(P_target[3,6,:,:]))); plt.colorbar(im)
 
-title="Real part of P_25,18"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.real(P[25,18,:,:])); plt.colorbar(im)
-title="Real part of P_18,25"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.real(P[18,25,:,:])); plt.colorbar(im)
-title="Absolute value of extrapolated P_18,25"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.absolute(P_target[18,25,:,:])); plt.colorbar(im)
+title="Real part of P_25,18"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.real(P[25,18,:,:]))); plt.colorbar(im)
+title="Real part of P_18,25"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.real(P[18,25,:,:]))); plt.colorbar(im)
+title="Absolute value of extrapolated P_18,25"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(P_target[18,25,:,:]))); plt.colorbar(im)
+
+plt.show()

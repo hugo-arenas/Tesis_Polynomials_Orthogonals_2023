@@ -42,20 +42,16 @@ def old_r2d(z,w,n):
             P[k,j,:] = (z**k)*np.conjugate(z**j)
             P[k,j,:] = P[k,j,:]/norm(w,P[k,j,:])
   
-    for j in range(0,n):
-        for k in range(0,n):        
-            P[k,j,:] = P[k,j,:]/norm(w,P[k,j,:])
-            h = 0
-            for x in range(j,n):
-                if (x==j):
-                    h=k+1
-                else:
-                    h=0
-                for y in range(h,n):
-                    P[y,x,:] = P[y,x,:] - dot(w,P[k,j,:],P[y,x,:])*P[k,j,:]
-                    P[y,x,:] = P[y,x,:]/norm(w,P[y,x,:])
-                    
-           
+    for j in range(0,n): 
+        for k in range(0,n): 
+            P[k,j,:]=P[k,j,:]/norm(w,P[k,j,:])
+            for x in range(0,j+1): 
+                for y in range(0,n):
+                    if (j!=x or k!=y):
+                        P[k,j,:] = P[k,j,:] - dot(w,P[k,j,:],P[y,x,:])*P[y,x,:]
+                    else:
+                        break
+                P[k,j,:]=P[k,j,:]/norm(w,P[k,j,:])
     return P
 
 def new_r2d(z,w,n):
@@ -69,12 +65,21 @@ def new_r2d(z,w,n):
     
     for j in range(0,n):
         for k in range(0,n):
-            
-                P[k,j,:] = P[k,j,:]/norm(w,P[k,j,:])
-                sub_p = np.array(P[k,j,:])
+            P[k,j,:] = P[k,j,:]/norm(w,P[k,j,:])
+            if k==0 and j==0:
+                D=np.array(P[k,j,:])
                 M[k,j,:] = np.array(P[k,j,:])
-                P = P - dot2x2(w,sub_p,P)*sub_p
-                P = P/norm2x2(w,P)
+            else:
+                if k==1 and j>0:
+                    E = np.array(P[:,j:n,:])
+                    E = E/norm2x2(w,E)
+                    P[:,j:n,:] = np.array(E)
+                    
+                P = P - dot2x2(w,D,P)*D
+                P[k,j,:] =  P[k,j,:]/norm(w,P[k,j,:])
+                D=np.array(P[k,j,:])
+                M[k,j,:] = np.array(P[k,j,:])
+    
     return M
 #np.set_printoptions(threshold=np.inf)
 
@@ -112,7 +117,7 @@ du = 1/(dx*N)
 Lu = N*du
 
 u0 = -Lu/2
-du = np.linspace(u0,-u0,N)
+du = np.linspace(ini,-ini,N)
 u,v = np.meshgrid(du,du)
 
 z = u + 1j*v

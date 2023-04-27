@@ -34,14 +34,16 @@ def norm2x2(weights,x):
   npsum = aux*npsum
   return npsum
   
-def recurrence2d(z,w,n,fftimg1):
+def recurrence2d(z,w,n,i):
     P = np.zeros(shape=(n,n,z.size),dtype=np.complex128)
     A = np.zeros(shape=(n,n,z.size),dtype=np.complex128)
+    B = np.zeros(shape=(n,n,z.size),dtype=np.complex128)
     M = 0.0 + 0.0j
-    f, c = fftimg1.shape
+    f, c = i.shape
     Ig = np.zeros(shape=(f,c),dtype=np.complex128)
     std_a = np.zeros(1,dtype=np.complex128)
-    ffti = np.array(fftimg1)
+    iaux = np.array(i)
+    D = np.zeros(z.size,dtype=np.complex128)
     
     for j in range(0,n):
         for k in range(0,n):
@@ -50,28 +52,73 @@ def recurrence2d(z,w,n,fftimg1):
             
     for j in range(0,n):
         for k in range(0,n):
-            
             P[k,j,:] = P[k,j,:]/norm(w,P[k,j,:])
             sub_p = np.array(P[k,j,:])
             A[k,j,:] = np.array(P[k,j,:])
-                
-            M = dot(w,A[k,j,:],ffti.flatten())
-            Asub = np.reshape(A,(n,n,f,c))
-            Ig = Ig + M*Asub[k,j,:,:]
-            if j==0 and k == 0:
-                std = np.std(fftimg1)
-                std_a[0] = std
-            else:
-                ffti = ffti - M*Asub[k,j,:,:]
-                std = np.std(ffti)
-                std_a = np.concatenate((std_a,np.array([std])),axis=0)
-                
             P = P - dot2x2(w,sub_p,P)*sub_p
             P = P/norm2x2(w,P)
-    return A, Ig, std_a
+    '''       
+    for j1 in range(0,n): # column
+        for k1 in range(0,n): # row element to be substracted from the rest
+        # preparing the first element from current k1,j1
+        # ensure the case when we reach the bottom
 
-N = 71
-S = 80
+            no=norm(w,A[k1,j1,:])
+            A[k1,j1,:]/=no  
+            # second pass
+            for j2 in range(0,j1+1): #origin column
+                for k2 in range(0,n): # origin row
+                    #print(k1,j1,k2,j2)
+                    if (j1!=j2 or k1!=k2):
+                        prod=dot(w,A[k1,j1,:],A[k2,j2,:])
+                        A[k1,j1,:] -= prod*A[k2,j2,:]
+                    else:
+                        break
+                no=norm(w,A[k1,j1,:])
+                A[k1,j1,:]/=no
+            M = dot(w,A[k,j,:],iaux.flatten())
+            Bsub = np.reshape(A,(n,n,f,c))
+            Ig = Ig + M*Bsub[k,j,:,:]
+            if j==0 and k == 0:
+                std = np.std(i)
+                std_a[0] = std
+            else:
+                iaux = iaux - M*Bsub[k,j,:,:]
+                std = np.std(iaux)
+                std_a = np.concatenate((std_a,np.array([std])),axis=0)
+    '''
+    for j in range(0,n):
+        for k in range(0,n):
+            A[k,j,:] = A[k,j,:]/norm(w,A[k,j,:])
+            if k==0 and j==0:
+                D=np.array(A[k,j,:])
+                B[k,j,:] = np.array(A[k,j,:])
+            else:
+                if k==1 and j>0:
+                    print(j)
+                    E = np.array(A[:,j:n,:])
+                    E = E/norm2x2(w,E)
+                    A[:,j:n,:] = np.array(E)
+                    
+                A = A - dot2x2(w,D,A)*D
+                A[k,j,:] =  A[k,j,:]/norm(w,A[k,j,:])
+                D=np.array(A[k,j,:])
+                B[k,j,:] = np.array(A[k,j,:])
+            M = dot(w,B[k,j,:],iaux.flatten())
+            Bsub = np.reshape(B,(n,n,f,c))
+            Ig = Ig + M*Bsub[k,j,:,:]
+            if j==0 and k == 0:
+                std = np.std(i)
+                std_a[0] = std
+            else:
+                iaux = iaux - M*Bsub[k,j,:,:]
+                std = np.std(iaux)
+                std_a = np.concatenate((std_a,np.array([std])),axis=0)
+    
+    return B, Ig, std_a
+
+N = 31
+S = 30
 
 ini = -1
 
@@ -95,31 +142,20 @@ ax2 = fig.add_subplot(122)
 im1=ax1.matshow(np.asnumpy(img1))
 
 im2=ax2.matshow(np.asnumpy(np.absolute(fftimg1)))
-#plt.show()
 
-#dx = (ini*2)/N
-#du = 1/(dx*N)
-#Lu = N*du
-
-#u0 = -Lu/2
-#du = np.linspace(u0,-u0,N)
 du = np.linspace(ini,-ini,N)
 u,v = np.meshgrid(du,du)
-
 z = u + 1j*v
 
-#du = np.linspace(u0,-u0,N*factor)
-#u,v = np.meshgrid(du,du)
-#z_target = u + 1j*v
+#u = np.reshape(np.linspace(ini,-ini,N),(N,1)) 
+#v = np.reshape(np.linspace(ini,-ini,N),(1,N)) 
+#z= u+1j*v
 
-    
 w = np.ones((N,N))
 
 start_time = time.time()
 
-#P, P_target, Ig, std_a = recurrence2d(z.flatten(), z_target.flatten(), w.flatten(), N-1, fftimg1)
-#P, Ig, std_a = recurrence2d(z.flatten(), z_target.flatten(), w.flatten(), N-1, fftimg1)
-P, Ig, std_a = recurrence2d(z.flatten(), w.flatten(), S, fftimg1)
+P, Ig, std_a = recurrence2d(z.flatten(), w.flatten(), S, img1)
 
 print(time.time() - start_time)
 # Polynomial correlation
@@ -141,6 +177,7 @@ fig=plt.figure("corr")
 im=plt.imshow(np.asnumpy(np.absolute(corr)))
 plt.colorbar(im)
 
+'''
 # we exibit orthononality errors (no diagonal) bellow diagonal
 cor=corr-np.diag(np.diag(corr))
 fig=plt.figure()
@@ -205,26 +242,26 @@ P=np.reshape(P,(S,S,N,N))
 
 #I = np.fft.fftshift(Ig)
 
-I = np.fft.ifft2(Ig)#*N/pi
-#I = np.fft.fftshift(I)
+I = np.fft.ifft2(Ig)
+I = np.fft.fftshift(I)
 
-residual = Ig - fftimg1
+'''
 
-title="Absolute value of P_2,2"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(P[2,2,:,:]))); plt.colorbar(im)
+print()
 
-title="Absolute value of P_6,3"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(P[6,3,:,:]))); plt.colorbar(im) # this exhibit symmetry diferences
-title="Absolute value of P_3,6"; fig=plt.figure(title); plt.title(title);  im=plt.imshow(np.asnumpy(np.absolute(P[3,6,:,:]))); plt.colorbar(im)
+residual = Ig - img1
 
-#title="Absolute value of extrapolated P_6,3"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(P_target[6,3,:,:]))); plt.colorbar(im) # this exhibit symmetry diferences
-#title="Absolute value of extrapolated P_3,6"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(P_target[3,6,:,:]))); plt.colorbar(im)
+#title="Absolute value of P_2,2"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(P[2,2,:,:]))); plt.colorbar(im)
 
-title="Real part of P_25,18"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.real(P[25,18,:,:]))); plt.colorbar(im)
-title="Real part of P_18,25"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.real(P[18,25,:,:]))); plt.colorbar(im)
-#title="Absolute value of extrapolated P_18,25"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(P_target[18,25,:,:]))); plt.colorbar(im)
+#title="Absolute value of P_6,3"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(P[6,3,:,:]))); plt.colorbar(im)
+#title="Absolute value of P_3,6"; fig=plt.figure(title); plt.title(title);  im=plt.imshow(np.asnumpy(np.absolute(P[3,6,:,:]))); plt.colorbar(im)
+
+#title="Real part of P_25,18"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.real(P[25,18,:,:]))); plt.colorbar(im)
+#title="Real part of P_18,25"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.real(P[18,25,:,:]))); plt.colorbar(im)
 title="Model"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(Ig)))
 
 plt.savefig("modelo.png")
-title="Result"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(I)))
+#title="Result"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(I)))
 title="Residual"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(residual)))
 title="Desviation Standar"; fig=plt.figure(title); plt.title(title); plt.plot(np.asnumpy(std_a))
 
