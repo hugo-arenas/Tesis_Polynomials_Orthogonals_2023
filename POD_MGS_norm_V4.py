@@ -171,6 +171,7 @@ img1 = np.exp(-pi*(array_x**2 + array_y**2))
 noise = np.random.rand(N,N)
 
 #hollows = np.zeros(shape=(N,N),dtpye=float)
+#create hollows
 
 img = np.array(img1)
 
