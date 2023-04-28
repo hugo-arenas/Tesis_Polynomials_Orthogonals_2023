@@ -12,6 +12,7 @@ def dot(weights,x,y):
 def norm(weights,x):
   return(np.sqrt(np.sum(weights*np.absolute(x)**2)))
 
+<<<<<<< HEAD
 def dot2x2(weights,x,y,t):
   f,c,d = y.shape
   aux = np.ones(shape=(f,c,d),dtype=float)
@@ -20,6 +21,13 @@ def dot2x2(weights,x,y,t):
     mul = y*w*np.conjugate(x)
   else:
     mul = x*w*np.conjugate(y)
+=======
+def dot2x2(weights,x,y):
+  f,c,d = y.shape
+  aux = np.ones(shape=(f,c,d),dtype=float)
+  w = aux*weights
+  mul = x*w*np.conjugate(y)
+>>>>>>> master
   npsum = np.sum(mul,axis=2)
   npsum = np.reshape(npsum,(f,c,1))
   npsum = aux*npsum
@@ -58,6 +66,7 @@ def recurrence2d(z,w,n,i):
             P[k,j,:] = P[k,j,:]/norm(w,P[k,j,:])
             sub_p = np.array(P[k,j,:])
             A[k,j,:] = np.array(P[k,j,:])
+<<<<<<< HEAD
             P = P - dot2x2(w,sub_p,P,1)*sub_p
             P = P/norm2x2(w,P)
             
@@ -65,16 +74,64 @@ def recurrence2d(z,w,n,i):
         for k in range(0,n):
             if k==0 and j==0:
                 A[k,j,:] = A[k,j,:]/norm(w,A[k,j,:])
+=======
+            P = P - dot2x2(w,sub_p,P)*sub_p
+            P = P/norm2x2(w,P)
+    '''       
+    for j1 in range(0,n): # column
+        for k1 in range(0,n): # row element to be substracted from the rest
+        # preparing the first element from current k1,j1
+        # ensure the case when we reach the bottom
+
+            no=norm(w,A[k1,j1,:])
+            A[k1,j1,:]/=no  
+            # second pass
+            for j2 in range(0,j1+1): #origin column
+                for k2 in range(0,n): # origin row
+                    #print(k1,j1,k2,j2)
+                    if (j1!=j2 or k1!=k2):
+                        prod=dot(w,A[k1,j1,:],A[k2,j2,:])
+                        A[k1,j1,:] -= prod*A[k2,j2,:]
+                    else:
+                        break
+                no=norm(w,A[k1,j1,:])
+                A[k1,j1,:]/=no
+            M = dot(w,A[k,j,:],iaux.flatten())
+            Bsub = np.reshape(A,(n,n,f,c))
+            Ig = Ig + M*Bsub[k,j,:,:]
+            if j==0 and k == 0:
+                std = np.std(i)
+                std_a[0] = std
+            else:
+                iaux = iaux - M*Bsub[k,j,:,:]
+                std = np.std(iaux)
+                std_a = np.concatenate((std_a,np.array([std])),axis=0)
+    '''
+    for j in range(0,n):
+        for k in range(0,n):
+            A[k,j,:] = A[k,j,:]/norm(w,A[k,j,:])
+            if k==0 and j==0:
+>>>>>>> master
                 D=np.array(A[k,j,:])
                 B[k,j,:] = np.array(A[k,j,:])
             else:
                 if k==1 and j>0:
+<<<<<<< HEAD
                     A=A/norm2x2(w,A)
                     
                 A = A - dot2x2(w,D,A,0)*D
                 A[k,j,:] =  A[k,j,:]/norm(w,A[k,j,:])
                 if (k==0):
                     A[k,j,:] = A[k,j,:]/norm(w,A[k,j,:])
+=======
+                    print(j)
+                    E = np.array(A[:,j:n,:])
+                    E = E/norm2x2(w,E)
+                    A[:,j:n,:] = np.array(E)
+                    
+                A = A - dot2x2(w,D,A)*D
+                A[k,j,:] =  A[k,j,:]/norm(w,A[k,j,:])
+>>>>>>> master
                 D=np.array(A[k,j,:])
                 B[k,j,:] = np.array(A[k,j,:])
             M = dot(w,B[k,j,:],iaux.flatten())
@@ -90,8 +147,13 @@ def recurrence2d(z,w,n,i):
     
     return B, Ig, std_a
 
+<<<<<<< HEAD
 N = 101#size image
 S = 8#polynomial order
+=======
+N = 31
+S = 30
+>>>>>>> master
 
 ini = -1
 
@@ -105,6 +167,7 @@ array_y = np.reshape(array_x,(1,N))
 
 img1 = np.exp(-pi*(array_x**2 + array_y**2))
 
+<<<<<<< HEAD
 noise = np.random.rand(N,N)
 
 #hollows = np.zeros(shape=(N,N),dtpye=float)
@@ -123,6 +186,18 @@ ax2 = fig.add_subplot(122)
 im1=ax1.matshow(np.asnumpy(img))
 
 im2=ax2.matshow(np.asnumpy(np.absolute(img1)))
+=======
+fftimg1 = np.fft.fft2(img1)#*pi/N
+fftimg1 = np.fft.fftshift(fftimg1)
+
+fig = plt.figure("image vs fft")
+ax1 = fig.add_subplot(121)
+ax2 = fig.add_subplot(122)
+
+im1=ax1.matshow(np.asnumpy(img1))
+
+im2=ax2.matshow(np.asnumpy(np.absolute(fftimg1)))
+>>>>>>> master
 
 du = np.linspace(ini,-ini,N)
 u,v = np.meshgrid(du,du)
@@ -230,15 +305,24 @@ I = np.fft.fftshift(I)
 
 print()
 
+<<<<<<< HEAD
 residual = Ig - img
+=======
+residual = Ig - img1
+>>>>>>> master
 
 #title="Absolute value of P_2,2"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(P[2,2,:,:]))); plt.colorbar(im)
 
 #title="Absolute value of P_6,3"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(P[6,3,:,:]))); plt.colorbar(im)
 #title="Absolute value of P_3,6"; fig=plt.figure(title); plt.title(title);  im=plt.imshow(np.asnumpy(np.absolute(P[3,6,:,:]))); plt.colorbar(im)
 
+<<<<<<< HEAD
 #title="Real part of P_25,18"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.real(P[14,10,:,:]))); plt.colorbar(im)
 #title="Real part of P_18,25"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.real(P[10,14,:,:]))); plt.colorbar(im)
+=======
+#title="Real part of P_25,18"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.real(P[25,18,:,:]))); plt.colorbar(im)
+#title="Real part of P_18,25"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.real(P[18,25,:,:]))); plt.colorbar(im)
+>>>>>>> master
 title="Model"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(Ig)))
 
 plt.savefig("modelo.png")
