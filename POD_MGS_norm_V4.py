@@ -90,7 +90,7 @@ def recurrence2d(z,w,n,i):
     return B, Ig, std_a
 
 N = 101#size image
-S = 30#polynomial order
+S = 8#polynomial order
 print("Size image N: ",N, " and polynomial order S: ",S)
 
 ini = -1
