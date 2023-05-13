@@ -52,9 +52,9 @@ def recurrence2d(z,w,i):
         A = np.zeros(shape=(n,n,z.size),dtype=np.complex128)
         B = np.zeros(shape=(n,n,z.size),dtype=np.complex128)
         M = 0.0 + 0.0j
-        f, c = i.shape
-        Ig = np.zeros(shape=(f,c),dtype=np.complex128)
-        Igaux = np.zeros(shape=(f,c),dtype=np.complex128)
+        data = np.size(i)
+        Ig = np.zeros(data,dtype=np.complex128)
+        Igaux = np.zeros(data,dtype=np.complex128)
         std_a = np.zeros(1,dtype=np.complex128)
         iaux = np.array(i)
         D = np.zeros(z.size,dtype=np.complex128)
@@ -106,13 +106,13 @@ def recurrence2d(z,w,i):
                     D=np.array(A[k-j,l+j,:])
                     B[k-j,l+j,:] = np.array(A[k-j,l+j,:])
                 M = dot(w,B[k-j,l+j,:],iaux.flatten())
-                Bsub = np.reshape(B,(n,n,f,c))
+                Bsub = np.reshape(B,(n,n,data))
                 Ig = Ig + M*Bsub[k-j,l+j,:,:]
                 if j==0 and k == 0:
                     std = np.std(i)
                     std_a[0] = std
                 else:
-                    iaux = iaux - M*Bsub[k-j,l+j,:,:]
+                    iaux = iaux - M*Bsub[k-j,l+j,:]
                     std = np.std(iaux)
                     std_a = np.concatenate((std_a,np.array([std])),axis=0)
                     if std <= value:
@@ -134,11 +134,13 @@ N = 101#size image
 #print("Size image N: ",N, " and polynomial order S: ",S)
 print("Size image N: ",N)
 
-ini = -1
+ini = 1
+
+p = 0.5
 
 #factor = 3
 
-array_x = np.linspace(ini,-ini,N)
+array_x = np.linspace(-ini,ini,N)
 
 array_x = np.reshape(array_x,(N,1))
 
@@ -159,6 +161,10 @@ noise = np.random.rand(N,N)
 
 img1 = img1*noise
 
+mask = np.random.binomial(n=1,p,size=(N,N))
+
+img2 = img1[mask==1]
+
 #fftimg1 = np.fft.fft2(img1)#*pi/N
 #fftimg1 = np.fft.fftshift(fftimg1)
 
@@ -170,20 +176,32 @@ im1=ax1.matshow(np.asnumpy(img))
 
 im2=ax2.matshow(np.asnumpy(np.absolute(img1)))
 
-du = np.linspace(ini,-ini,N)
-u,v = np.meshgrid(du,du)
-z = u + 1j*v
+#du = np.linspace(-ini,ini,N)
+u0 = np.linspace(-ini,ini,N)
+u = np.reshape(u0,(1,N))*np.ones(shape=(N,1))
+
+v0 = np.linspace(-ini,ini,N)
+v = np.reshape(v0,(N,1))*np.ones(shape=(1,N))
+
+u_selected = u[mask==1]
+v_selected = v[mask==1]
+
+z_selected = u_selected + v_selected*1j
+
+#u,v = np.meshgrid(du,du)
+#z = u + 1j*v
 
 #u = np.reshape(np.linspace(ini,-ini,N),(N,1)) 
 #v = np.reshape(np.linspace(ini,-ini,N),(1,N)) 
 #z= u+1j*v
 
-w = np.ones((N,N))
+#w = np.ones((N,N))
+w = np.ones((np.size(z_selected),np.size(z_selected)))
 
 start_time = time.time()
 
 #P, Ig, std_a = recurrence2d(z.flatten(), w.flatten(), S, img1)
-P, Ig, std_a, S, idx_max = recurrence2d(z.flatten(), w.flatten(), img1)
+P, Ig, std_a, S, idx_max = recurrence2d(z.flatten(), w.flatten(), img2)
 
 print("Orden de polinomio al cuadrado es: ", S, "y el polinomio que da menor desviación estándar es: ", idx_max)
 
