@@ -37,39 +37,56 @@ def norm2x2(weights,x):
   npsum = aux*npsum
   return npsum
   
-def recurrence2d(z,w,i):
-    s = 5
+def recurrence2d(z,z_target,w, w_target, data, size):
+    min_n = 5
+    max_n = 21
     idx_max = 0
     value_min = 10.0
     s_order = 0
     stda_final = np.zeros(1,dtype=float)
     P_final = np.zeros(1,dtype=np.complex128)
     Ig_final = np.zeros(1,dtype=np.complex128)
-    for n in range(s,21):
+    for s in range(min_n,max_n):
         idx = 0
         value = 10.0
-        P = np.zeros(shape=(n,n,z.size),dtype=np.complex128)
-        A = np.zeros(shape=(n,n,z.size),dtype=np.complex128)
-        B = np.zeros(shape=(n,n,z.size),dtype=np.complex128)
+        P = np.zeros(shape=(s,s,z.size),dtype=np.complex128)
+        P_target = np.zeros(shape=(s,s,z_target.size),dtype=np.complex128)
+        
+        A = np.zeros(shape=(s,s,z.size),dtype=np.complex128)
+        A_target = np.zeros(shape=(s,s,z_target.size),dtype=np.complex128)
+        
+        B = np.zeros(shape=(s,s,z.size),dtype=np.complex128)
+        B_target = np.zeros(shape=(s,s,z_target.size),dtype=np.complex128)
+        
         M = 0.0 + 0.0j
-        data = np.size(i)
-        Ig = np.zeros(data,dtype=np.complex128)
-        Igaux = np.zeros(data,dtype=np.complex128)
+        n = np.size(data)
+        
+        Ig = np.zeros(shape=(size,size),dtype=np.complex128)
+        
+        Ig_aux = np.zeros(shape=(size,size),dtype=np.complex128)
+        
         std_a = np.zeros(1,dtype=np.complex128)
-        iaux = np.array(i)
+        
+        dataux = np.array(data)
+        
         D = np.zeros(z.size,dtype=np.complex128)
+        D_target = np.zeros(z_target.size,dtype=np.complex128)
+        
         kaux=0
         l=0
-        for j in range(0,n):
-            for k in range(0,n):
+        for j in range(0,s):
+            for k in range(0,s):
                 P[k,j,:] = (z**k)*np.conjugate(z**j)
+                P_target[k,j,:] = (z_target**k)*np.conjugate(z_target**j)
+                
                 P[k,j,:] = P[k,j,:]/norm(w,P[k,j,:])
+                P_target[k,j,:] = P_target[k,j,:]/norm(w,P[k,j,:])
         
-        large1 = np.array(range(0,n))
-        large2 = np.ones(n-1)*(n-1)
+        large1 = np.array(range(0,s))
+        large2 = np.ones(s-1)*(s-1)
         large = np.concatenate((large1,large2),axis=0)
         for k in large:
-            if kaux!=n-1:
+            if kaux!=s-1:
                 l=0
             else:
                 l=l+1
@@ -77,15 +94,21 @@ def recurrence2d(z,w,i):
             kaux = k
             for j in range(0,k+1-l):
                 P[k-j,l+j,:] = P[k-j,l+j,:]/norm(w,P[k-j,l+j,:])
-                sub_p = np.array(P[k-j,l+j,:])
+                P_target[k-j,l+j,:] = P_target[k-j,l+j,:]/norm(w,P[k-j,l+j,:])
+
                 A[k-j,l+j,:] = np.array(P[k-j,l+j,:])
-                P = P - dot2x2(w,sub_p,P,1)*sub_p
+                A_target[k-j,l+j,:] = np.array(P_target[k-j,l+j,:])
+                
+                P = P - dot2x2(w,P[k-j,l+j,:],P,1)*P[k-j,l+j,:]
+                P_target = P_target - dot2x2(w_target,P_target[k-j,l+j,:],P_target,1)*P_target[k-j,l+j,:]
+                
                 P = P/norm2x2(w,P)
+                P_target = P_target/norm2x2(w_target,P_target)
 
         kaux=0
         l=0
         for k in large:
-            if kaux!=n-1:
+            if kaux!=s-1:
                 l=0
             else:
                 l=l+1
@@ -94,38 +117,55 @@ def recurrence2d(z,w,i):
             for j in range(0,k+1-l):
                 if k==0 and j==0:
                     A[k-j,l+j,:] = A[k-j,l+j,:]/norm(w,A[k-j,l+j,:])
+                    A_target[k-j,l+j,:] = A_target[k-j,l+j,:]/norm(w,A[k-j,l+j,:])
+                    
                     D=np.array(A[k-j,l+j,:])
+                    D_target=np.array(A_target[k-j,l+j,:])
+                    
                     B[k-j,l+j,:] = np.array(A[k-j,l+j,:])
+                    B_target[k-j,l+j,:] = np.array(A_target[k-j,l+j,:])
                 else:
                     if j==1+l and k>0:
-                        A=A/norm2x2(w,A)                   
+                        A=A/norm2x2(w,A)
+                        A_target=A_target/norm2x2(w_target,A_target)
+                
                     A = A - dot2x2(w,D,A,0)*D
+                    A_target = A_target - dot2x2(w_target,D_target,A_target,0)*D_target
+                    
                     A[k-j,l+j,:] =  A[k-j,l+j,:]/norm(w,A[k-j,l+j,:])
+                    A_target[k-j,l+j,:] =  A_target[k-j,l+j,:]/norm(w,A[k-j,l+j,:])
+                    
                     if (j==l):
                         A[k-j,l+j,:] = A[k-j,l+j,:]/norm(w,A[k-j,l+j,:])
+                        A_target[k-j,l+j,:] =  A_target[k-j,l+j,:]/norm(w,A[k-j,l+j,:])
                     D=np.array(A[k-j,l+j,:])
+                    D_target=np.array(A_target[k-j,l+j,:])
+                    
                     B[k-j,l+j,:] = np.array(A[k-j,l+j,:])
-                M = dot(w,B[k-j,l+j,:],iaux.flatten())
-                Bsub = np.reshape(B,(n,n,data))
+                    B_target[k-j,l+j,:] = np.array(A_target[k-j,l+j,:])
+                    
+                M = dot(w,B[k-j,l+j,:],dataux.flatten())
+                print(M)
+                Bsub = np.reshape(B_target,(s, s, size, size))
                 Ig = Ig + M*Bsub[k-j,l+j,:,:]
                 if j==0 and k == 0:
-                    std = np.std(i)
+                    std = np.std(data)
                     std_a[0] = std
                 else:
-                    iaux = iaux - M*Bsub[k-j,l+j,:]
-                    std = np.std(iaux)
+                    dataux = dataux - M*B[k-j,l+j,:]
+                    std = np.std(dataux)
                     std_a = np.concatenate((std_a,np.array([std])),axis=0)
                     if std <= value:
                         value = std
                         pos = np.where(std_a == value)
                         idx = max(pos[0])
-                        Igaux = np.array(Ig)
+                        Ig_aux = np.array(Ig)
         if value <= value_min:
             value_min = value
             idx_max = idx
-            s_order = n
-            P_final = np.array(B)
-            Ig_final = np.array(Igaux)
+            s_order = s
+            P_final = np.array(B_target)
+            Ig_final = np.array(Ig_aux)
             stda_final = np.array(std_a)
     return P_final, Ig_final, stda_final, s_order, idx_max
 
@@ -161,20 +201,26 @@ noise = np.random.rand(N,N)
 
 img1 = img1*noise
 
-mask = np.random.binomial(n=1,p,size=(N,N))
+mask = np.random.binomial(n=1,p=0.5,size=(N,N))
+
+img1_corrupt = np.array(img1)
+img1_corrupt[np.logical_not(mask)]=0
 
 img2 = img1[mask==1]
 
 #fftimg1 = np.fft.fft2(img1)#*pi/N
 #fftimg1 = np.fft.fftshift(fftimg1)
 
-fig = plt.figure("image (without noise) vs image (with noise)")
-ax1 = fig.add_subplot(121)
-ax2 = fig.add_subplot(122)
+fig = plt.figure("image (original) vs image (noise) vs image (corrupt)")
+ax1 = fig.add_subplot(131)
+ax2 = fig.add_subplot(132)
+ax3 = fig.add_subplot(133)
 
 im1=ax1.matshow(np.asnumpy(img))
 
 im2=ax2.matshow(np.asnumpy(np.absolute(img1)))
+
+im3=ax3.matshow(np.asnumpy(np.absolute(img1_corrupt)))
 
 #du = np.linspace(-ini,ini,N)
 u0 = np.linspace(-ini,ini,N)
@@ -186,22 +232,23 @@ v = np.reshape(v0,(N,1))*np.ones(shape=(1,N))
 u_selected = u[mask==1]
 v_selected = v[mask==1]
 
-z_selected = u_selected + v_selected*1j
+z = u_selected + v_selected*1j
 
 #u,v = np.meshgrid(du,du)
 #z = u + 1j*v
 
-#u = np.reshape(np.linspace(ini,-ini,N),(N,1)) 
-#v = np.reshape(np.linspace(ini,-ini,N),(1,N)) 
-#z= u+1j*v
+u = np.reshape(np.linspace(-ini,ini,N),(N,1)) 
+v = np.reshape(np.linspace(-ini,ini,N),(1,N)) 
+z_target = u+1j*v
 
 #w = np.ones((N,N))
-w = np.ones((np.size(z_selected),np.size(z_selected)))
+w = np.ones(np.size(z))
+w_target = np.ones((N,N))
 
 start_time = time.time()
 
 #P, Ig, std_a = recurrence2d(z.flatten(), w.flatten(), S, img1)
-P, Ig, std_a, S, idx_max = recurrence2d(z.flatten(), w.flatten(), img2)
+P, Ig, std_a, S, idx_max = recurrence2d(z,z_target.flatten(), w.flatten(), w_target.flatten(), img2, N)
 
 print("Orden de polinomio al cuadrado es: ", S, "y el polinomio que da menor desviación estándar es: ", idx_max)
 
@@ -214,10 +261,10 @@ K,J=np.meshgrid(K,J)
 #idx=K>=J
 idx=K>=J # case with diagonal
 idx = np.reshape(idx,(S,S,1))
-idx = np.ones((S,S,N*N))*idx
+idx = np.ones((S,S,np.size(z_target)))*idx
 idx = idx==1
 pp=P[idx]
-pp =np.reshape(pp,(int(S*(S+1)/2),N*N))
+pp =np.reshape(pp,(int(S*(S+1)/2),np.size(z_target)))
 #pp =np.reshape(pp,(int(N*(N-1)/2),M*M)) # case without diagonal
 corr=np.dot(pp,np.conjugate(pp.T))
 
@@ -297,7 +344,7 @@ I = np.fft.fftshift(I)
 
 print()
 
-residual = Ig - img
+#residual = Ig - img
 
 #title="Absolute value of P_2,2"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(P[2,2,:,:]))); plt.colorbar(im)
 
