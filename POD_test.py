@@ -12,28 +12,14 @@ def dot(weights,x,y):
 def norm(weights,x):
   return(np.sqrt(np.sum(weights*np.absolute(x)**2)))
 
-def dot2x2(weights,x,y,t):
+def dot2x2(weights,x,y):
   f,c,d = y.shape
   aux = np.ones(shape=(f,c,d),dtype=float)
   w = aux*weights
-  if t==0:
-    mul = y*w*np.conjugate(x)
-  else:
-    mul = x*w*np.conjugate(y)
+  mul = x*w*np.conjugate(y)
   npsum = np.sum(mul,axis=2)
   npsum = np.reshape(npsum,(f,c,1))
   npsum = aux*npsum
-
-  return npsum
-  
-#def dot2x2C(weights,x,y):
-#  f,c,d = y.shape
-#  aux = np.ones(shape=(f,c,d),dtype=float)
-#  w = aux*weights
-#  mul = y*w*np.conjugate(x)
-#  npsum = np.sum(mul,axis=2)
-#  npsum = np.reshape(npsum,(f,c,1))
-#  npsum = aux*npsum
 
   return npsum
 
@@ -56,42 +42,45 @@ def old_r2d(z,w,n):
             P[k,j,:] = (z**k)*np.conjugate(z**j)
             P[k,j,:] = P[k,j,:]/norm(w,P[k,j,:])
   
-    for j in range(0,n): 
-        for k in range(0,n):
-            P[k,j,:]=P[k,j,:]/norm(w,P[k,j,:])
-            for x in range(0,j+1):
-                for y in range(0,n):
-                    if (j!=x or k!=y):
-                        P[k,j,:] = P[k,j,:] - dot(w,P[k,j,:],P[y,x,:])*P[y,x,:]
-                    else:
-                        break
-                P[k,j,:]=P[k,j,:]/norm(w,P[k,j,:])
+    for j in range(0,n):
+        for k in range(0,n):        
+            P[k,j,:] = P[k,j,:]/norm(w,P[k,j,:])
+            if (k==n-1): # at the bottom
+                lowerj2=j+1 # advance column
+            else:
+                lowerj2=j
+            h = 0
+            for x in range(lowerj2,n):
+                if (k==n-1 and x==lowerj2):
+                    h=0
+                elif (x==lowerj2):
+                    h=k+1
+                else:
+                    h=0
+                for y in range(h,n):
+                    P[y,x,:] = P[y,x,:] - dot(w,P[k,j,:],P[y,x,:])*P[k,j,:]
+                    P[y,x,:] = P[y,x,:]/norm(w,P[y,x,:])
+                    
+           
     return P
 
 def new_r2d(z,w,n):
     P = np.zeros(shape=(n,n,z.size),dtype=np.complex128)
     M = np.zeros(shape=(n,n,z.size),dtype=np.complex128)
-    D = np.zeros(z.size,dtype=np.complex128)
+    
     for j in range(0,n):
         for k in range(0,n):
             P[k,j,:] = (z**k)*np.conjugate(z**j)
             P[k,j,:] = P[k,j,:]/norm(w,P[k,j,:])
-    P = P/norm2x2(w,P)
+    
     for j in range(0,n):
         for k in range(0,n):
-            if k==0 and j==0:
+            
                 P[k,j,:] = P[k,j,:]/norm(w,P[k,j,:])
-                D=np.array(P[k,j,:])
+                sub_p = np.array(P[k,j,:])
                 M[k,j,:] = np.array(P[k,j,:])
-            else:
-                if (k==1 and j>0):
-                    P=P/norm2x2(w,P)   
-                P = P - dot2x2(w,D,P,0)*D
-                P[k,j,:] = P[k,j,:]/norm(w,P[k,j,:])
-                if (k==0):
-                    P[k,j,:] = P[k,j,:]/norm(w,P[k,j,:])
-                D=np.array(P[k,j,:])
-                M[k,j,:] = np.array(P[k,j,:])
+                P = P - dot2x2(w,sub_p,P)*sub_p
+                P = P/norm2x2(w,P)
     return M
 #np.set_printoptions(threshold=np.inf)
 
@@ -99,7 +88,7 @@ N = 31
 
 S = 30
 
-ini = -1
+ini = -1.5
 
 factor = 3
 
@@ -148,9 +137,6 @@ P2 = new_r2d(z.flatten(), w.flatten(), S)
 
 print("Tiempo de ejecución orden N^2 (nuevo):", time.time() - start_time)
 
-idx = P1==P2
-#print("Diferencia parcial:", np.asnumpy(np.sum((P1[:,3,:]-P2[:,3,:]),axis=1)))
 print("Diferencia de resultados:", np.asnumpy(np.sum(P1-P2)))
-#print("Diferencia de resultados:", idx)
 
 plt.show()

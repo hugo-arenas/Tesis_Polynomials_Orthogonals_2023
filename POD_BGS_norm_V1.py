@@ -12,21 +12,22 @@ def dot(weights,x,y):
 def norm(weights,x):
   return(np.sqrt(np.sum(weights*np.absolute(x)**2)))
 
-def dot2x2(weights,x,y,t):
-  f,c,d = y.shape
+def dot2x2(weights,x1,x2,t_gm, d_size):
+  f,c,d = x2.shape
   aux = np.ones(shape=(f,c,d),dtype=float)
   w = aux*weights
-  if t==0:
-    mul = y*w*np.conjugate(x)
+  if t_gm==0:
+    mul = x2*w*np.conjugate(x1)
   else:
-    mul = x*w*np.conjugate(y)
+    mul = x1*w*np.conjugate(x2)
   npsum = np.sum(mul,axis=2)
   npsum = np.reshape(npsum,(f,c,1))
+  aux = np.ones(shape=(f,c,d_size),dtype=float)
   npsum = aux*npsum
 
   return npsum
 
-def norm2x2(weights,x):
+def norm2x2(weights,x, d_size):
   f,c,d = x.shape
   aux = np.ones(shape=(f,c,d),dtype=float)
   w = aux*weights
@@ -34,12 +35,16 @@ def norm2x2(weights,x):
   npsum = np.sum(mul,axis=2)
   npsum = np.sqrt(npsum)
   npsum = np.reshape(npsum,(f,c,1))
+  aux = np.ones(shape=(f,c,d_size),dtype=float)
   npsum = aux*npsum
   return npsum
   
-def recurrence2d(z,z_target,w, w_target, data, size):
-    min_n = 5
-    max_n = 31
+def recurrence2d(z,z_target,w, data, size):
+    z = np.array(z)
+    z_target = np.array(z_target)
+    w = np.array(w)
+    min_n = 20
+    max_n = 21
     idx_max = 0
     value_min = 10.0
     s_order = 0
@@ -50,108 +55,123 @@ def recurrence2d(z,z_target,w, w_target, data, size):
         idx = 0
         value = 10.0
         P = np.zeros(shape=(s,s,z.size),dtype=np.complex128)
-        P_target = np.zeros(shape=(s,s,z_target.size),dtype=np.complex128)
-        
-        A = np.zeros(shape=(s,s,z.size),dtype=np.complex128)
-        A_target = np.zeros(shape=(s,s,z_target.size),dtype=np.complex128)
-        
-        B = np.zeros(shape=(s,s,z.size),dtype=np.complex128)
-        B_target = np.zeros(shape=(s,s,z_target.size),dtype=np.complex128)
-        
-        M = 0.0 + 0.0j
-        n = np.size(data)
-        
-        Ig = np.zeros(shape=(size,size),dtype=np.complex128)
-        
-        Ig_aux = np.zeros(shape=(size,size),dtype=np.complex128)
-        
-        std_a = np.zeros(1,dtype=np.complex128)
-        
-        dataux = np.array(data)
-        
-        D = np.zeros(z.size,dtype=np.complex128)
-        D_target = np.zeros(z_target.size,dtype=np.complex128)
-        
-        kaux=0
+        P_target = np.zeros(shape=(s,s,z_target.size),dtype=np.complex128)      
+        V = np.ones(shape=(s,s,1),dtype=int)       
+        M = 0.0 + 0.0j       
+        Ig = np.zeros(shape=(size,size),dtype=np.complex128)       
+        Ig_aux = np.zeros(shape=(size,size),dtype=np.complex128)      
+        std_a = np.zeros(1,dtype=np.complex128)     
+        dataux = np.array(data)       
+        k2=0
         l=0
         for j in range(0,s):
             for k in range(0,s):
-                P[k,j,:] = (z**k)*np.conjugate(z**j)
-                P_target[k,j,:] = (z_target**k)*np.conjugate(z_target**j)
+                P[k,j,:] = (z**k)*(np.conjugate(z**j))[:]
+                P_target[k,j,:] = (z_target**k)*(np.conjugate(z_target**j))[:]
                 
-                P[k,j,:] = P[k,j,:]/norm(w,P[k,j,:])
-                P_target[k,j,:] = P_target[k,j,:]/norm(w,P[k,j,:])
+                no=norm(w,P[k,j,:])
+                P[k,j,:] = P[k,j,:]/no
+                P_target[k,j,:] = P_target[k,j,:]/no
         
         large1 = np.array(range(0,s))
         large2 = np.ones(s-1)*(s-1)
         large = np.concatenate((large1,large2),axis=0)
         for k in large:
-            if kaux!=s-1:
+            if k2!=s-1:
                 l=0
             else:
                 l=l+1
             k = int(k)
-            kaux = k
-            for j in range(0,k+1-l):
-                P[k-j,l+j,:] = P[k-j,l+j,:]/norm(w,P[k-j,l+j,:])
-                P_target[k-j,l+j,:] = P_target[k-j,l+j,:]/norm(w,P[k-j,l+j,:])
-
-                A[k-j,l+j,:] = np.array(P[k-j,l+j,:])
-                A_target[k-j,l+j,:] = np.array(P_target[k-j,l+j,:])
+            k2 = k
+            for j in range(l,k+1):
+                no=norm(w,P[k-j+l,j,:])
+                P[k-j+l,j,:] = P[k-j+l,j,:]/no
+                P_target[k-j+l,j,:] = P_target[k-j+l,j,:]/no
                 
-                P = P - dot2x2(w,P[k-j,l+j,:],P,1)*P[k-j,l+j,:]
-                P_target = P_target - dot2x2(w_target,P_target[k-j,l+j,:],P_target,1)*P_target[k-j,l+j,:]
+                V[k-j+l,j,:] = 0
                 
-                P = P/norm2x2(w,P)
-                P_target = P_target/norm2x2(w_target,P_target)
-
-        kaux=0
+                dot_data = dot2x2(w,P[k-j+l,j,:],P*V,1,z.size)
+                dot_target = dot2x2(w,P[k-j+l,j,:],P*V,1,z_target.size)
+                
+                P = P - dot_data*P[k-j+l,j,:]
+                P_target = P_target - dot_target*P_target[k-j+l,j,:]
+                
+                no_data = norm2x2(w,P,z.size)
+                no_target = norm2x2(w,P,z_target.size)
+                
+                no_data[(V*np.ones(z.size,dtype=int)) == 0] = 1 
+                no_target[(V*np.ones(z_target.size,dtype=int)) == 0] = 1
+                
+                P = P/no_data
+                P_target = P_target/no_target
+        
+        V = np.ones(shape=(s,s,1),dtype=int)
+        k2=0
         l=0
+        D = np.zeros(1,dtype=np.complex128)
+        D_target = np.zeros(1,dtype=np.complex128)
+        
+        no_data = norm2x2(w,P,z.size)
+        no_target = norm2x2(w,P,z_target.size)
+        P = P/no_data
+        P_target = P_target/no_target
+        #print("###############################")
+        
         for k in large:
-            if kaux!=s-1:
+            if k2!=s-1:
                 l=0
             else:
                 l=l+1
             k = int(k)
-            kaux = k
-            for j in range(0,k+1-l):
+            k2 = k
+            for j in range(l,k+1):
+                #print("K_aux = ", k_aux, " y J_aux =",j_aux)
                 if k==0 and j==0:
-                    A[k-j,l+j,:] = A[k-j,l+j,:]/norm(w,A[k-j,l+j,:])
-                    A_target[k-j,l+j,:] = A_target[k-j,l+j,:]/norm(w,A[k-j,l+j,:])
-                    
-                    D=np.array(A[k-j,l+j,:])
-                    D_target=np.array(A_target[k-j,l+j,:])
-                    
-                    B[k-j,l+j,:] = np.array(A[k-j,l+j,:])
-                    B_target[k-j,l+j,:] = np.array(A_target[k-j,l+j,:])
+                    no=norm(w,P[k-j+l,j,:])
+                    P[k-j+l,j,:] = P[k-j+l,j,:]/no
+                    P_target[k-j+l,j,:] = P_target[k-j+l,j,:]/no
+                    D = np.array(P[k-j+l,j,:])
+                    D_target = np.array(P_target[k-j+l,j,:])
+                    V[k-j+l,j,:] = 0
+
                 else:
-                    if j==1+l and k>0:
-                        A=A/norm2x2(w,A)
-                        A_target=A_target/norm2x2(w_target,A_target)
-                
-                    A = A - dot2x2(w,D,A,0)*D
-                    A_target = A_target - dot2x2(w_target,D_target,A_target,0)*D_target
+                    if j==1+l and k>=0:
+                        no_data = norm2x2(w,P,z.size)
+                        no_target = norm2x2(w,P,z_target.size)
+
+                        no_data[(V*np.ones(z.size,dtype=int)) == 0] = 1 
+                        no_target[(V*np.ones(z_target.size,dtype=int)) == 0] = 1
+
+                        P=P/no_data
+                        P_target=P_target/no_target
                     
-                    A[k-j,l+j,:] =  A[k-j,l+j,:]/norm(w,A[k-j,l+j,:])
-                    A_target[k-j,l+j,:] =  A_target[k-j,l+j,:]/norm(w,A[k-j,l+j,:])
+                    dot_data = dot2x2(w,D,P*V,0,z.size)
+                    dot_target = dot2x2(w,D,P*V,0,z_target.size)
+                    
+                    P = P - dot_data*D
+                    P_target = P_target - dot_target*D_target
+                    
+                    no=norm(w,P[k-j+l,j,:])
+                    P[k-j+l,j,:] =  P[k-j+l,j,:]/no
+                    P_target[k-j+l,j,:] =  P_target[k-j+l,j,:]/no
                     
                     if (j==l):
-                        A[k-j,l+j,:] = A[k-j,l+j,:]/norm(w,A[k-j,l+j,:])
-                        A_target[k-j,l+j,:] =  A_target[k-j,l+j,:]/norm(w,A[k-j,l+j,:])
-                    D=np.array(A[k-j,l+j,:])
-                    D_target=np.array(A_target[k-j,l+j,:])
-                    
-                    B[k-j,l+j,:] = np.array(A[k-j,l+j,:])
-                    B_target[k-j,l+j,:] = np.array(A_target[k-j,l+j,:])
-                    
-                M = dot(w,B[k-j,l+j,:],dataux.flatten())
-                Bsub = np.reshape(B_target,(s, s, size, size))
-                Ig = Ig + M*Bsub[k-j,l+j,:,:]
+                        no=norm(w,P[k-j+l,j,:])
+                        P[k-j+l,j,:] = P[k-j+l,j,:]/no
+                        P_target[k-j+l,j,:] =  P_target[k-j+l,j,:]/no
+
+                    V[k-j+l,j,:] = 0
+                    D = np.array(P[k-j+l,j,:])
+                    D_target = np.array(P_target[k-j+l,j,:])
+                       
+                M = dot(w,P[k-j+l,j,:],dataux.flatten())
+                Psub = np.reshape(P_target,(s, s, size, size))
+                Ig = Ig + M*Psub[k-j+l,j,:,:]
                 if j==0 and k == 0:
                     std = np.std(data)
                     std_a[0] = std
                 else:
-                    dataux = dataux - M*B[k-j,l+j,:]
+                    dataux = dataux - M*P[k-j+l,j,:]
                     std = np.std(dataux)
                     std_a = np.concatenate((std_a,np.array([std])),axis=0)
                     if std <= value:
@@ -163,38 +183,56 @@ def recurrence2d(z,z_target,w, w_target, data, size):
             value_min = value
             idx_max = idx
             s_order = s
-            P_final = np.array(B_target)
+            P_final = np.array(P_target)
             Ig_final = np.array(Ig_aux)
             stda_final = np.array(std_a)
     return P_final, Ig_final, stda_final, s_order, idx_max
 
+def disk(low,high,theta,e,a,dim):
+  # Domain of measurements
+  x=np.linspace(start=low,stop=high,num=dim)
+  y=np.linspace(start=low,stop=high,num=dim)
+
+  sigma=(high-low)/2/(3*3) # 3 sigma on 1/3 of the canvas
+
+  x,y=np.meshgrid(x,y)
+  b=a*np.sqrt(1-e**2)
+  # rotating and distorting the circle
+  x = x*np.cos(theta)/a + y*np.sin(theta)/b
+  y = x*np.sin(theta)/a - y*np.cos(theta)/b
+  # the radious of this distortion
+  r = np.sqrt(x**2 + y**2)
+  img = (1.0+np.sin(r/(0.01*sigma*2*np.pi)))*np.exp(-r*r/(2*sigma**2))/2.0
+  return(img)
+
+def gauss(ini,dim):
+    array_x = np.linspace(-ini,ini,dim)
+    array_x = np.reshape(array_x,(dim,1))
+    array_y = np.reshape(array_x,(1,dim))
+    img = np.exp(-pi*(array_x**2 + array_y**2))
+    return(img)
+    
 N = 101#size image
 #S = 8#polynomial order
 #print("Size image N: ",N, " and polynomial order S: ",S)
+
+
 print("Size image N: ",N)
 
 ini = 1
 
-p = 0.1
+p = 1
 
 #factor = 3
 
-array_x = np.linspace(-ini,ini,N)
-
-array_x = np.reshape(array_x,(N,1))
-
-array_y = np.reshape(array_x,(1,N))
-
-img1 = np.exp(-pi*(array_x**2 + array_y**2))
+img = disk(low=-ini,high=ini,theta=0.4, e=0.8,a=1, dim=N)
 
 noise = np.random.rand(N,N)
 
 #hollows = np.zeros(shape=(N,N),dtpye=float)
 #create hollows
 
-img = np.array(img1)
-
-img1 = img1*noise
+img1 = np.array(img)*noise
 
 noise = np.random.rand(N,N)
 
@@ -243,18 +281,47 @@ z_target = u+1j*v
 
 #w = np.ones((N,N))
 w = np.ones(np.size(z))
-w_target = np.ones((N,N))
+#w_target = np.ones((N,N))
 
 start_time = time.time()
 
-#P, Ig, std_a = recurrence2d(z.flatten(), w.flatten(), S, img1)
-P, Ig, std_a, S, idx_max = recurrence2d(z,z_target.flatten(), w.flatten(), w_target.flatten(), img2, N)
+dim_z = int(np.sqrt(z.size))
+dif = int(N/dim_z)
+img_f = np.zeros(shape=(N,N),dtype=np.complex128)
+if N == dim_z:
+    print(dim_z)
+    dif = 0
+for r in range(0,dif+1):
+    min_y, max_y, min_x, max_x = 0,0,0,0
+    for c in range(0,dif+1):
+        if r == dif and c == dif:
+            min_y, min_x = N-dim_z, N-dim_z
+            max_y, max_x = N, N
+        elif r == dif:
+            min_y, max_y = N-dim_z, N
+            min_x, max_x = dim_z*c, dim_z*(c+1)
+        elif c == dif:
+            min_x, max_x = N-dim_z, N
+            min_y, max_y = dim_z*r, dim_z*(r+1)
+        else:
+            min_y, max_y = dim_z*r, dim_z*(r+1)
+            min_x, max_x = dim_z*c, dim_z*(c+1)
+        z_point = z_target[min_y:max_y,min_x:max_x]
+        P, Ig, std_a, S, idx_max = recurrence2d(z.flatten(),z_point.flatten(), w.flatten(), img2, dim_z)
+        img_f[min_y:max_y,min_x:max_x] = Ig
+
+#z_point = z_target[N-dim_z:N,N-dim_z:N]
+#P, Ig, std_a, S, idx_max = recurrence2d(z.flatten(),z_point.flatten(), w.flatten(), img2, dim_z)
+#img_f[N-dim_z:N,N-dim_z:N] = Ig       
+        
+    
+#P, Ig, std_a, S, idx_max = recurrence2d(z,z_target.flatten(), w.flatten(), img2, N)
 
 print("Orden de polinomio al cuadrado es: ", S, "y el polinomio que da menor desviación estándar es: ", idx_max)
 
 print(time.time() - start_time)
 # Polynomial correlation
-
+'''
 K=np.arange(S)
 J=np.arange(S)
 K,J=np.meshgrid(K,J)
@@ -272,7 +339,7 @@ fig=plt.figure("corr")
 im=plt.imshow(np.asnumpy(np.absolute(corr)))
 plt.colorbar(im)
 
-'''
+
 # we exibit orthononality errors (no diagonal) bellow diagonal
 cor=corr-np.diag(np.diag(corr))
 fig=plt.figure()
@@ -353,12 +420,12 @@ print()
 
 #title="Real part of P_25,18"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.real(P[14,10,:,:]))); plt.colorbar(im)
 #title="Real part of P_18,25"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.real(P[10,14,:,:]))); plt.colorbar(im)
-title="Model"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(Ig)))
+title="Model"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(img_f)))
 
 plt.savefig("modelo.png")
 #title="Result"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(I)))
 #title="Residual"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(residual)))
-title="Desviation Standar"; fig=plt.figure(title); plt.title(title); plt.plot(np.asnumpy(std_a))
+#title="Desviation Standar"; fig=plt.figure(title); plt.title(title); plt.plot(np.asnumpy(std_a))
 
 plt.show()
 

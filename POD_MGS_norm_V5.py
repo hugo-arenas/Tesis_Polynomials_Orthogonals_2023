@@ -37,99 +37,138 @@ def norm2x2(weights,x):
   npsum = aux*npsum
   return npsum
   
-def recurrence2d(z,w,n,i):
+def recurrence2d(z,w,n,dim,i):
     P = np.zeros(shape=(n,n,z.size),dtype=np.complex128)
-    A = np.zeros(shape=(n,n,z.size),dtype=np.complex128)
-    B = np.zeros(shape=(n,n,z.size),dtype=np.complex128)
-    M = 0.0 + 0.0j
-    f, c = i.shape
-    Ig = np.zeros(shape=(f,c),dtype=np.complex128)
-    std_a = np.zeros(1,dtype=np.complex128)
+    V = np.ones(shape=(n,n,1),dtype=int)
+    Ig = np.zeros(shape=(dim,dim),dtype=np.complex128)
+    Ig_f = np.zeros(shape=(dim,dim),dtype=np.complex128)
     iaux = np.array(i)
-    D = np.zeros(z.size,dtype=np.complex128)
-    kaux=0
-    l=0
+    std_a = np.zeros(1,dtype=np.complex128)
+    
+    value = 100000
     for j in range(0,n):
         for k in range(0,n):
             P[k,j,:] = (z**k)*np.conjugate(z**j)
             P[k,j,:] = P[k,j,:]/norm(w,P[k,j,:])
-    
+            
     large1 = np.array(range(0,n))
     large2 = np.ones(n-1)*(n-1)
     large = np.concatenate((large1,large2),axis=0)
+    k2 = 0
+    l = 0
     for k in large:
-        if kaux!=n-1:
+        if (k2!=n-1):
             l=0
         else:
             l=l+1
         k = int(k)
-        kaux = k
-        for j in range(0,k+1-l):
-            P[k-j,l+j,:] = P[k-j,l+j,:]/norm(w,P[k-j,l+j,:])
-            sub_p = np.array(P[k-j,l+j,:])
-            A[k-j,l+j,:] = np.array(P[k-j,l+j,:])
-            P = P - dot2x2(w,sub_p,P,1)*sub_p
-            P = P/norm2x2(w,P)
-    kaux=0
+        k2 = k
+        for j in range(l,k+1):
+            no=norm(w,P[k-j+l,j,:])
+            P[k-j+l,j,:] = P[k-j+l,j,:]/no          
+            V[k-j+l,j,:] = 0
+            sub_p = np.array(P[k-j+l,j,:])            
+            dot_data = dot2x2(w,sub_p,P*V,1)          
+            P = P - dot_data*sub_p         
+            no_data = norm2x2(w,P)        
+            no_data[(V*np.ones(z.size,dtype=int)) == 0] = 1           
+            P = P/no_data
+            
+    V = np.ones(shape=(n,n,1),dtype=int)
+    k2=0
     l=0
+    p_data = np.ones(1,dtype=np.complex128)
+    P = P/norm2x2(w,P)
     for k in large:
-        if kaux!=n-1:
+        if (k2!=n-1):
             l=0
         else:
             l=l+1
         k = int(k)
-        kaux = k
-        for j in range(0,k+1-l):
+        k2 = k
+        for j in range(l,k+1):
             if k==0 and j==0:
-                A[k-j,l+j,:] = A[k-j,l+j,:]/norm(w,A[k-j,l+j,:])
-                D=np.array(A[k-j,l+j,:])
-                B[k-j,l+j,:] = np.array(A[k-j,l+j,:])
+                no=norm(w,P[k-j+l,j,:])
+                P[k-j+l,j,:] = P[k-j+l,j,:]/no
+                V[k-j+l,j,:] = 0
+                p_data = np.array(P[k-j+l,j,:])
+
             else:
-                if j==1+l and k>0:
-                    A=A/norm2x2(w,A)                   
-                A = A - dot2x2(w,D,A,0)*D
-                A[k-j,l+j,:] =  A[k-j,l+j,:]/norm(w,A[k-j,l+j,:])
+                if (j==1+l and k>=0):
+                    no_data = norm2x2(w,P)
+                    no_data[(V*np.ones(z.size,dtype=int)) == 0] = 1                                   
+                    P=P/no_data            
+                dot_data = dot2x2(w,p_data,P*V,0)
+                P = P - dot_data*p_data
+                no=norm(w,P[k-j+l,j,:])
+                P[k-j+l,j,:] =  P[k-j+l,j,:]/no             
                 if (j==l):
-                    A[k-j,l+j,:] = A[k-j,l+j,:]/norm(w,A[k-j,l+j,:])
-                D=np.array(A[k-j,l+j,:])
-                B[k-j,l+j,:] = np.array(A[k-j,l+j,:])
-            M = dot(w,B[k-j,l+j,:],iaux.flatten())
-            Bsub = np.reshape(B,(n,n,f,c))
-            Ig = Ig + M*Bsub[k-j,l+j,:,:]
+                    no=norm(w,P[k-j+l,j,:])
+                    P[k-j+l,j,:] = P[k-j+l,j,:]/no
+                V[k-j+l,j,:] = 0
+                p_data = np.array(P[k-j+l,j,:])
+            M = dot(w,P[k-j+l,j,:],iaux.flatten())
+            Psub = np.reshape(P,(n,n,dim,dim))
+            Ig = Ig + M*Psub[k-j+l,j,:,:]
             if j==0 and k == 0:
                 std = np.std(i)
                 std_a[0] = std
             else:
-                iaux = iaux - M*Bsub[k-j,l+j,:,:]
+                iaux = iaux - M*Psub[k-j+l,j,:,:]
                 std = np.std(iaux)
                 std_a = np.concatenate((std_a,np.array([std])),axis=0)
+                if std <=value:
+                    value = std
+                    Ig_f = np.array(Ig)
     
-    return B, Ig, std_a
+    return P, Ig_f, std_a, std
 
+def disk(low,high,theta,e,a,dim):
+  # Domain of measurements
+  x=np.linspace(start=low,stop=high,num=dim)
+  y=np.linspace(start=low,stop=high,num=dim)
+
+  sigma=(high-low)/2/(3*3) # 3 sigma on 1/3 of the canvas
+
+  x,y=np.meshgrid(x,y)
+  b=a*np.sqrt(1-e**2)
+  # rotating and distorting the circle
+  x = x*np.cos(theta)/a + y*np.sin(theta)/b
+  y = x*np.sin(theta)/a - y*np.cos(theta)/b
+  # the radious of this distortion
+  r = np.sqrt(x**2 + y**2)
+  img = (1.0+np.sin(r/(0.01*sigma*2*np.pi)))*np.exp(-r*r/(2*sigma**2))/2.0
+  return(img)
+
+def gauss(ini,dim):
+    array_x = np.linspace(-ini,ini,dim)
+    array_x = np.reshape(array_x,(dim,1))
+    array_y = np.reshape(array_x,(1,dim))
+    img = np.exp(-pi*(array_x**2 + array_y**2))
+    return(img)
+    
 N = 101#size image
-S = 8#polynomial order
-print("Size image N: ",N, " and polynomial order S: ",S)
+S = 50
+#S = 8#polynomial order
+#print("Size image N: ",N, " and polynomial order S: ",S)
 
-ini = -1
+
+print("Size image N: ",N)
+
+ini = 1
+
+p = 1
 
 #factor = 3
 
-array_x = np.linspace(ini,-ini,N)
-
-array_x = np.reshape(array_x,(N,1))
-
-array_y = np.reshape(array_x,(1,N))
-
-img1 = np.exp(-pi*(array_x**2 + array_y**2))
+img = disk(low=-ini,high=ini,theta=0.4, e=0.8,a=1, dim=N)
 
 noise = np.random.rand(N,N)
 
 #hollows = np.zeros(shape=(N,N),dtpye=float)
 #create hollows
 
-img = np.array(img1)
-
-img1 = img1*noise
+img1 = img*noise
 
 #fftimg1 = np.fft.fft2(img1)#*pi/N
 #fftimg1 = np.fft.fftshift(fftimg1)
@@ -141,6 +180,8 @@ ax2 = fig.add_subplot(122)
 im1=ax1.matshow(np.asnumpy(img))
 
 im2=ax2.matshow(np.asnumpy(np.absolute(img1)))
+
+stda_original = np.std(img.flatten())
 
 du = np.linspace(ini,-ini,N)
 u,v = np.meshgrid(du,du)
@@ -154,9 +195,12 @@ w = np.ones((N,N))
 
 start_time = time.time()
 
-P, Ig, std_a = recurrence2d(z.flatten(), w.flatten(), S, img1)
+P, Ig, std_a, std_m = recurrence2d(z.flatten(), w.flatten(), S, N, img1)
 
 print(time.time() - start_time)
+
+print("STD original: ",np.asnumpy(stda_original))
+print("STD mínimo: ",np.asnumpy(std_m))
 # Polynomial correlation
 
 K=np.arange(S)
