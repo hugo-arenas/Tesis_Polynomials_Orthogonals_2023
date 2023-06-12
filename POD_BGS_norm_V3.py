@@ -48,8 +48,8 @@ def recurrence2d(z,z_target,w, data, size, datarget):
     z = np.array(z)
     z_target = np.array(z_target)
     w = np.array(w)
-    min_n = 20
-    max_n = 21
+    min_n = 30
+    max_n = 31
     idx_max = 0
     value_min = 1000000.0
     s_order = 0
@@ -177,11 +177,8 @@ def recurrence2d(z,z_target,w, data, size, datarget):
                     dataux = dataux - M*P[k-j+l,j,:]
                     std = np.std(dataux)
                     std_a = np.concatenate((std_a,np.array([std])),axis=0)
-                    #if abs(mse(Ig, datarget)) <= value:
                     if std <= value:
-                        #print("Order: ",s,"; MSE: ",abs(mse(Ig, datarget)))
                         value = std
-                        #value = abs(mse(Ig, datarget))
                         pos = np.where(std_a == std)
                         idx = max(pos[0])
                         Ig_aux = np.array(Ig)
@@ -220,12 +217,13 @@ def gauss(ini,dim):
     
 def star4(ini,dim):
     array_x = np.linspace(-ini,ini,dim)
+    array_y = np.linspace(-ini,ini,dim)
     array_x = np.reshape(array_x,(dim,1))
-    array_y = np.reshape(array_x,(1,dim))
-    img = 1/(array_x + 1) + 1/(array_y + 1)
+    array_y = np.reshape(array_y,(1,dim))
+    img = (1/(np.absolute(array_x)+2)) + (1/(np.absolute(array_y)+2))
     return(img)
     
-N = 200#size image
+N = 300#size image
 #S = 8#polynomial order
 #print("Size image N: ",N, " and polynomial order S: ",S)
 
@@ -236,9 +234,9 @@ ini = 1
 p = 1.
 
 
-img = disk(low=-ini,high=ini,theta=0.4, e=0.8,a=1, dim=N)
+#img = disk(low=-ini,high=ini,theta=0.4, e=0.8,a=1, dim=N)
 
-#img = star4(ini,N)
+img = star4(ini,N)
 
 noise = np.random.rand(N,N)
 
@@ -254,7 +252,7 @@ mask = np.random.binomial(n=1,p=p,size=(N,N))
 img1_corrupt = np.array(img1)
 img1_corrupt[np.logical_not(mask)]=0
 
-img2 = img1[mask==1]
+img2 = img[mask==1]
 
 fig = plt.figure("image (original) vs image (noise) vs image (corrupt)")
 ax1 = fig.add_subplot(131)
@@ -295,7 +293,7 @@ w = np.ones(np.size(z))
 
 start_time = time.time()
 
-dim_z = 100
+dim_z = 101
 dif = int(N/dim_z)
 img_f = np.zeros(shape=(N,N),dtype=np.complex128)
 
@@ -321,16 +319,27 @@ for r in range(0,dif):
             min_y, max_y = N-dim_z, N
         if c == dif-1:
             min_x, max_x = N-dim_z, N
-
+        
+        #u0 = np.linspace(-ini,ini,dim_z)
+        #u = np.reshape(u0,(1,dim_z))*np.ones(shape=(dim_z,1))
+        #v = np.reshape(u0,(dim_z,1))*np.ones(shape=(1,dim_z))
+        
+        #z_target_point = u+1j*v
+        
         z_target_point = z_target[min_y:max_y,min_x:max_x]
         z_point = z[np.where((z.real>=min_u)&(z.real<=max_u)&(z.imag>=min_v)&(z.imag<=max_v))]
         
         index = np.where((z.real>=min_u)&(z.real<=max_u)&(z.imag>=min_v)&(z.imag<=max_v))
         img2_point = img2[index]
+        
         w_point = w[index]
         
+        #title="Model("+str(r)+","+str(c)+")"; fig=plt.figure(title); plt.title(title); im=plt.imshow(np.asnumpy(np.absolute(np.reshape(img2_point,(dim_z,dim_z)))))
+        
         print(img2_point.size,w_point.size,z_point.size)
+        #print(np.sum(z_target_point.flatten()-  z_point))
         P, Ig, std_a, S, idx_max = recurrence2d(z_point.flatten(),z_target_point.flatten(), w_point.flatten(), img2_point, dim_z, img)
+        print("Orden de polinomio al cuadrado es: ", S, "y el polinomio que da menor desviación estándar es: ", idx_max)
         #P, Ig, std_a, S, idx_max = recurrence2d(z.flatten(),z_target_point.flatten(), w.flatten(), img2, dim_z, img)
         img_f[min_y:max_y,min_x:max_x] = Ig
 
@@ -347,7 +356,7 @@ for r in range(0,dif):
     
 #P, Ig, std_a, S, idx_max = recurrence2d(z,z_target.flatten(), w.flatten(), img2, N, img)
 
-print("Orden de polinomio al cuadrado es: ", S, "y el polinomio que da menor desviación estándar es: ", idx_max)
+#print("Orden de polinomio al cuadrado es: ", S, "y el polinomio que da menor desviación estándar es: ", idx_max)
 
 print(time.time() - start_time)
 # Polynomial correlation

@@ -105,7 +105,7 @@ def recurrence2d(z,z_target,w, data, size):
                 P = P/no_data
                 P_target = P_target/no_target
         
-        V[:,:,:] = np.ones(shape=(s,s,1),dtype=int)
+        V = np.ones(shape=(s,s,1),dtype=int)
         k2=0
         l=0
         D = np.zeros(1,dtype=np.complex128)
@@ -115,7 +115,6 @@ def recurrence2d(z,z_target,w, data, size):
         no_target = norm2x2(w,P,z_target.size)
         P = P/no_data
         P_target = P_target/no_target
-        #print("###############################")
         
         for k in large:
             if k2!=s-1:
@@ -125,7 +124,6 @@ def recurrence2d(z,z_target,w, data, size):
             k = int(k)
             k2 = k
             for j in range(l,k+1):
-                #print("K_aux = ", k_aux, " y J_aux =",j_aux)
                 if k==0 and j==0:
                     no=norm(w,P[k-j+l,j,:])
                     P[k-j+l,j,:] = P[k-j+l,j,:]/no
@@ -169,14 +167,14 @@ def recurrence2d(z,z_target,w, data, size):
                 Ig = Ig + M*Psub[k-j+l,j,:,:]
                 if j==0 and k == 0:
                     std = np.std(data)
-                    std_a[0] = std
+                    std_a = np.array([std])
                 else:
                     dataux = dataux - M*P[k-j+l,j,:]
                     std = np.std(dataux)
                     std_a = np.concatenate((std_a,np.array([std])),axis=0)
                     if std <= value:
                         value = std
-                        pos = np.where(std_a == value)
+                        pos = np.where(std_a == std)
                         idx = max(pos[0])
                         Ig_aux = np.array(Ig)
         if value <= value_min:
@@ -212,7 +210,7 @@ def gauss(ini,dim):
     img = np.exp(-pi*(array_x**2 + array_y**2))
     return(img)
     
-N = 101#size image
+N = 100#size image
 #S = 8#polynomial order
 #print("Size image N: ",N, " and polynomial order S: ",S)
 
